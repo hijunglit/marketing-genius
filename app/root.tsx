@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "react-router";
 
 import type { Route } from "./+types/root";
@@ -14,6 +15,7 @@ import {
   SidebarTrigger,
 } from "./common/components/ui/sidebar";
 import { AppSidebar } from "./common/components/app-sidebar";
+import Navigation from "./common/components/navigation";
 
 console.log(styleseet);
 
@@ -50,16 +52,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
   return (
     <div className="flex justify-start">
-      <SidebarProvider>
-        <AppSidebar />
-        <main>
-          <SidebarTrigger />
-          {children}
-        </main>
-      </SidebarProvider>
-      <Outlet />
+      {pathname.includes("/auth") ? null : (
+        <Navigation children={children} isLoggedIn={true} />
+      )}
+      <div className="w-full">
+        <Outlet />
+      </div>
     </div>
   );
 }
