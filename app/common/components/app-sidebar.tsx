@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Link } from "react-router";
 
 // Menu items.
 const items = [
@@ -44,8 +45,8 @@ const items = [
     icon: Calendar,
   },
   {
-    title: "컨텐츠 관리",
-    url: "#",
+    title: "컨텐츠 목록",
+    url: "/contents",
     icon: Search,
   },
   {
@@ -66,10 +67,10 @@ export function AppSidebar() {
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

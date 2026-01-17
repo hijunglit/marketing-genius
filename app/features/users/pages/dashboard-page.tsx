@@ -4,7 +4,7 @@ import {
   ClockIcon,
   PlusIcon,
 } from "lucide-react";
-import { Link } from "react-router";
+import { data, isRouteErrorResponse, Link } from "react-router";
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +17,12 @@ import {
   CardFooter,
   CardHeader,
 } from "~/common/components/ui/card";
+import type { Route } from "./+types/dashboard-page";
+
+export const loader = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 3000));
+  return;
+};
 
 export default function Dashboard() {
   return (
@@ -79,7 +85,7 @@ export default function Dashboard() {
                       <div className="flex items-center">
                         <Avatar className="rounded-lg">
                           <AvatarImage
-                            src="https://github.com/evilrabbit.png"
+                            src="https://github.com/steve-jobs.png"
                             alt="@evilrabbit"
                           />
                           <AvatarFallback>ER</AvatarFallback>
@@ -110,4 +116,18 @@ export default function Dashboard() {
       </main>
     </div>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        {error.data.message} / {error.data.error_code}
+      </div>
+    );
+  }
+  if (error instanceof Error) {
+    return <div>{error.message}</div>;
+  }
+  return <div>Unknown Error</div>;
 }
