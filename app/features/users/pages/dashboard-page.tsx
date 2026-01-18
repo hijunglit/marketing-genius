@@ -20,7 +20,7 @@ import {
 import type { Route } from "./+types/dashboard-page";
 
 export const loader = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  await new Promise((resolve) => setTimeout(resolve, 100));
   return;
 };
 

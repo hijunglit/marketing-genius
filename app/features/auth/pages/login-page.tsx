@@ -25,7 +25,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
   const { success, data } = formSchema.safeParse(Object.fromEntries(formData));
   return {
-    message: "Error wrong password",
+    message: "비밀번호가 올바르지 않습니다.",
   };
 };
 

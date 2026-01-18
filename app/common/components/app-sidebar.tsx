@@ -1,4 +1,5 @@
 import {
+  Bot,
   Calendar,
   ChevronUp,
   Home,
@@ -48,6 +49,11 @@ const items = [
     title: "컨텐츠 목록",
     url: "/contents",
     icon: Search,
+  },
+  {
+    title: "AI 생성",
+    url: "/create/ai",
+    icon: Bot,
   },
   {
     title: "설정",
