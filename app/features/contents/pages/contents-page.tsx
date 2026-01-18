@@ -4,6 +4,8 @@ import {
   ClockIcon,
   PlusIcon,
   Search,
+  SquarePen,
+  Trash2,
 } from "lucide-react";
 import { Link } from "react-router";
 import {
@@ -58,32 +60,25 @@ export default function ContentsPage() {
               <Link to={"/contents/:id"} key={"contents" + index}>
                 <Card>
                   <div className="flex flex-col justify-between px-4 sm:flex-row">
-                    <div className="sm:flex">
-                      <div className="flex flex-col items-center sm:flex-row">
-                        <Avatar className="rounded-4xl">
-                          <AvatarImage
-                            src="https://github.com/hijunglit.png"
-                            alt="@evilrabbit"
-                          />
-                          <AvatarFallback>ER</AvatarFallback>
-                        </Avatar>
-                        <div className="flex items-center justify-between w-full sm:flex-col gap-4">
-                          <div>
-                            <p>제목</p>
+                    <div className="flex flex-col items-center sm:flex-row gap-4">
+                      <div className="size-24 rounded-xl shadow-lg overflow-hidden">
+                        <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" />
+                      </div>
+                      <div className="flex flex-col space-y-3">
+                        <div className="space-y-2">
+                          <p className="text-lg font-bold">제목</p>
+                          <div className="text-sm text-gray-700">
                             <span>상품명</span>
                             <span>|</span>
                             <span>설명</span>
                           </div>
-                          <div className="flex">
-                            <ClockIcon />
-                            <span>2026.1.1</span>
-                          </div>
                         </div>
+                        <span className="text-xs text-gray-500">2026.1.1</span>
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
-                      <p>편집</p>
-                      <p>삭제</p>
+                      <SquarePen size={16} />
+                      <Trash2 size={16} />
                     </div>
                   </div>
                 </Card>
