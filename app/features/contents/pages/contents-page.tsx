@@ -61,8 +61,9 @@ export default function ContentsPage() {
                 <Card>
                   <div className="flex flex-col justify-between px-4 sm:flex-row">
                     <div className="flex flex-col items-center sm:flex-row gap-4">
-                      <div className="size-24 rounded-xl shadow-lg overflow-hidden">
-                        <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" />
+                      <div className="w-full h-24 sm:size-24 rounded-xl shadow-lg overflow-hidden flex flex-col justify-center">
+                        <img src="https://i.pinimg.com/736x/ec/5f/b6/ec5fb6c189249e061bcce0159cac38ec.jpg" />
+                        {/* <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" /> */}
                       </div>
                       <div className="flex flex-col space-y-3">
                         <div className="space-y-2">

@@ -128,7 +128,8 @@ export default function Dashboard() {
                     <div className="flex">
                       <div className="flex items-center gap-4">
                         <div className="size-12 rounded-xl shadow-lg overflow-hidden">
-                          <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" />
+                          <img src="https://i.pinimg.com/736x/ec/5f/b6/ec5fb6c189249e061bcce0159cac38ec.jpg" />
+                          {/* <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" /> */}
                         </div>
                         <div>
                           <p className="text-sm font-bold">제목</p>
