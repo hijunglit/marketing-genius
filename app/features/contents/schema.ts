@@ -1,5 +1,13 @@
-import { bigint, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+  bigint,
+  boolean,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { profiles } from "../users/schema";
+import { ai } from "../ai/schema";
 
 export const contents = pgTable("contents", {
   contents_id: bigint({ mode: "number" })
@@ -18,4 +26,15 @@ export const images = pgTable("images", {
   contents_id: bigint({ mode: "number" }).references(
     () => contents.contents_id
   ),
+});
+
+export const requestContents = pgTable("request_contents", {
+  request_id: bigint({ mode: "number" })
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+  user_id: uuid().references(() => profiles.profile_id),
+  ai_id: bigint({ mode: "number" }).references(() => ai.ai_id),
+  request_prompt: text().notNull(),
+  is_confirm: boolean().notNull(),
+  created_at: timestamp().notNull().defaultNow(),
 });
