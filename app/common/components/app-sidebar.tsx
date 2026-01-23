@@ -37,22 +37,22 @@ const items = [
   },
   {
     title: "포스팅 요청",
-    url: "#",
+    url: "/posting/create",
     icon: Home,
   },
   {
-    title: "AI 관리",
-    url: "#",
+    title: "마케터 관리",
+    url: "/marketer",
     icon: Calendar,
   },
   {
-    title: "컨텐츠 목록",
+    title: "포스팅 목록",
     url: "/contents",
     icon: Search,
   },
   {
-    title: "AI 생성",
-    url: "/create/ai",
+    title: "마케터 생성",
+    url: "/marketer/create",
     icon: Bot,
   },
   {

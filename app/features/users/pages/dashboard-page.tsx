@@ -8,12 +8,7 @@ import {
   File,
   PlusIcon,
 } from "lucide-react";
-import { data, isRouteErrorResponse, Link } from "react-router";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "~/common/components/ui/avatar";
+import { isRouteErrorResponse, Link } from "react-router";
 import { Button } from "~/common/components/ui/button";
 import {
   Card,
@@ -27,12 +22,12 @@ const top_items = [
   {
     icon: File,
     enTitle: "Total",
-    koTitle: "총 컨텐츠",
+    koTitle: "전체 포스팅",
     amount: 1,
   },
   {
     icon: Bot,
-    enTitle: "AI",
+    enTitle: "Marketer",
     koTitle: "마케터",
     amount: 1,
   },
@@ -47,19 +42,19 @@ const top_items = [
 const quick_run_items = [
   {
     icon: PlusIcon,
-    title: "컨텐츠 생성",
+    title: "포스팅 생성",
   },
   {
     icon: Archive,
-    title: "컨텐츠 관리",
+    title: "포스팅 관리",
   },
   {
     icon: Bot,
-    title: "AI 생성",
+    title: "마케터 생성",
   },
   {
     icon: Bot,
-    title: "AI 관리",
+    title: "마케터 관리",
   },
 ];
 
@@ -78,7 +73,7 @@ export default function Dashboard() {
         </div>
         <div>
           <Button variant={"outline"}>
-            <PlusIcon /> 새 컨텐츠 만들기
+            <PlusIcon /> 새 포스팅
           </Button>
         </div>
       </header>
@@ -114,7 +109,7 @@ export default function Dashboard() {
         </section>
         <section>
           <div className="flex justify-between">
-            <h3 className="text-lg font-bold">최근 컨텐츠</h3>
+            <h3 className="text-lg font-bold">최근 포스팅</h3>
             <Link to={"/contents"} className="flex items-center">
               전체보기
               <ChevronRightIcon />

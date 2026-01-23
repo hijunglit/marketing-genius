@@ -13,6 +13,13 @@ export default [
     index("features/contents/pages/contents-page.tsx"),
     route("/:id", "features/contents/pages/contents-detail-page.tsx"),
   ]),
+  ...prefix("/marketer", [
+    index("features/marketer/pages/marketer-list.tsx"),
+    route("/create", "features/marketer/pages/create-marketer-page.tsx"),
+  ]),
+  ...prefix("/posting", [
+    route("/create", "features/posting/pages/create-posting-page.tsx"),
+  ]),
   ...prefix("/auth", [
     layout("features/auth/layouts/auth-layout.tsx", [
       route("/login", "features/auth/pages/login-page.tsx"),
