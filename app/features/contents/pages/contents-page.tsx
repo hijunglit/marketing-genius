@@ -1,33 +1,22 @@
-import {
-  CardSimIcon,
-  ChevronRightIcon,
-  ClockIcon,
-  PlusIcon,
-  Search,
-  SquarePen,
-  Trash2,
-} from "lucide-react";
+import { PlusIcon, SquarePen, Trash2 } from "lucide-react";
 import { Link } from "react-router";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "~/common/components/ui/avatar";
 import { Button } from "~/common/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "~/common/components/ui/card";
+import { Card } from "~/common/components/ui/card";
 import { Input } from "~/common/components/ui/input";
+import type { Route } from "./+types/contents-page";
+import { getContents } from "../queries";
+import { DateTime } from "luxon";
 
-export const loader = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  return null;
+export const meta: Route.MetaFunction = () => {
+  return [{ title: "컨텐츠 | Marketing Genius" }];
 };
 
-export default function ContentsPage() {
+export const loader = async () => {
+  const contents = await getContents();
+  return contents;
+};
+
+export default function ContentsPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="p-20 space-y-10">
       <header className="flex flex-col text-center gap-2 justify-between items-center sm:flex-row sm:text-left">
@@ -56,14 +45,13 @@ export default function ContentsPage() {
         </section>
         <section>
           <div className="flex flex-col gap-7">
-            {Array.from({ length: 5 }).map((_, index) => (
+            {loaderData.map((contents, index) => (
               <Link to={"/contents/:id"} key={"contents" + index}>
                 <Card>
                   <div className="flex flex-col justify-between px-4 sm:flex-row">
                     <div className="flex flex-col items-center sm:flex-row gap-4">
                       <div className="w-full h-24 sm:size-24 rounded-xl shadow-lg overflow-hidden flex flex-col justify-center">
-                        <img src="https://i.pinimg.com/736x/ec/5f/b6/ec5fb6c189249e061bcce0159cac38ec.jpg" />
-                        {/* <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" /> */}
+                        <img src={contents.images[0].image_url} />
                       </div>
                       <div className="flex flex-col space-y-3">
                         <div className="space-y-2">
@@ -71,10 +59,12 @@ export default function ContentsPage() {
                           <div className="text-sm text-gray-700">
                             <span>상품명</span>
                             <span>|</span>
-                            <span>설명</span>
+                            <span>{contents.text}</span>
                           </div>
                         </div>
-                        <span className="text-xs text-gray-500">2026.1.1</span>
+                        <span className="text-xs text-gray-500">
+                          {DateTime.fromISO(contents.created_at).toRelative()}
+                        </span>
                       </div>
                     </div>
                     <div className="flex gap-2 justify-end">
