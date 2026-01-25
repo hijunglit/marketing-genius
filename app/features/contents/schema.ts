@@ -7,7 +7,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { profiles } from "../users/schema";
-import { ai } from "../ai/schema";
+import { ai } from "../marketer/schema";
 
 export const contents = pgTable("contents", {
   contents_id: bigint({ mode: "number" })

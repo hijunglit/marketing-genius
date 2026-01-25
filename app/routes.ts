@@ -14,7 +14,7 @@ export default [
     route("/:id", "features/contents/pages/contents-detail-page.tsx"),
   ]),
   ...prefix("/marketer", [
-    index("features/marketer/pages/marketer-list.tsx"),
+    index("features/marketer/pages/marketer-list-page.tsx"),
     route("/create", "features/marketer/pages/create-marketer-page.tsx"),
   ]),
   ...prefix("/posting", [

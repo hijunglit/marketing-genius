@@ -1,9 +1,7 @@
-import type { Route } from "./+types/marketer-list";
+import type { Route } from "./+types/marketer-list-page";
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "Marketers" },
-  ];
+  return [{ title: "Marketers" }];
 }
 
 export default function MarketerListPage({}: Route.ComponentProps) {
