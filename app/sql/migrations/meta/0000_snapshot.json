@@ -1,5 +1,5 @@
 {
-  "id": "2f3b73a2-5127-4d6e-a72d-ddb088fd349e",
+  "id": "bf24c89d-524a-4350-94f3-b7f28aa24d97",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -25,20 +25,14 @@
             "cycle": false
           }
         },
-        "profile_id": {
-          "name": "profile_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "request_prompt": {
-          "name": "request_prompt",
+        "text": {
+          "name": "text",
           "type": "text",
           "primaryKey": false,
           "notNull": true
         },
-        "text": {
-          "name": "text",
+        "hashtag": {
+          "name": "hashtag",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -59,21 +53,7 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {
-        "contents_profile_id_profiles_profile_id_fk": {
-          "name": "contents_profile_id_profiles_profile_id_fk",
-          "tableFrom": "contents",
-          "tableTo": "profiles",
-          "columnsFrom": [
-            "profile_id"
-          ],
-          "columnsTo": [
-            "profile_id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        }
-      },
+      "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
@@ -125,6 +105,213 @@
           ],
           "columnsTo": [
             "contents_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.request_contents": {
+      "name": "request_contents",
+      "schema": "",
+      "columns": {
+        "request_id": {
+          "name": "request_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "request_contents_request_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "contents_id": {
+          "name": "contents_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profile_id": {
+          "name": "profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ai_id": {
+          "name": "ai_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "platform": {
+          "name": "platform",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "template": {
+          "name": "template",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_name": {
+          "name": "product_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "target": {
+          "name": "target",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "core_message": {
+          "name": "core_message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_confirm": {
+          "name": "is_confirm",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "request_contents_contents_id_contents_contents_id_fk": {
+          "name": "request_contents_contents_id_contents_contents_id_fk",
+          "tableFrom": "request_contents",
+          "tableTo": "contents",
+          "columnsFrom": [
+            "contents_id"
+          ],
+          "columnsTo": [
+            "contents_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "request_contents_profile_id_profiles_profile_id_fk": {
+          "name": "request_contents_profile_id_profiles_profile_id_fk",
+          "tableFrom": "request_contents",
+          "tableTo": "profiles",
+          "columnsFrom": [
+            "profile_id"
+          ],
+          "columnsTo": [
+            "profile_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "request_contents_ai_id_ai_ai_id_fk": {
+          "name": "request_contents_ai_id_ai_ai_id_fk",
+          "tableFrom": "request_contents",
+          "tableTo": "ai",
+          "columnsFrom": [
+            "ai_id"
+          ],
+          "columnsTo": [
+            "ai_id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ai": {
+      "name": "ai",
+      "schema": "",
+      "columns": {
+        "ai_id": {
+          "name": "ai_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "ai_ai_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "profiles_id": {
+          "name": "profiles_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "create_prompt": {
+          "name": "create_prompt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ai_profiles_id_profiles_profile_id_fk": {
+          "name": "ai_profiles_id_profiles_profile_id_fk",
+          "tableFrom": "ai",
+          "tableTo": "profiles",
+          "columnsFrom": [
+            "profiles_id"
+          ],
+          "columnsTo": [
+            "profile_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

@@ -14,19 +14,48 @@ import { Input } from "~/common/components/ui/input";
 import { Label } from "~/common/components/ui/label";
 import { z } from "zod";
 import type { Route } from "./+types/login-page";
+import { makeSSRClient } from "~/supa-client";
 
 const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z
+    .string({
+      required_error: "이메일을 입력해주세요.",
+      invalid_type_error: "이메일 형식이 올바르지 않습니다.",
+    })
+    .email("유효하지 않은 이메일 입니다."),
+  password: z
+    .string({
+      required_error: "비밀번호를 입력해주세요",
+    })
+    .min(8, {
+      message: "비밀번호는 8자리 이상이어야 합니다.",
+    }),
 });
 
 export const action = async ({ request }: Route.ActionArgs) => {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
   const formData = await request.formData();
-  const { success, data } = formSchema.safeParse(Object.fromEntries(formData));
-  return {
-    message: "비밀번호가 올바르지 않습니다.",
-  };
+  const { success, data, error } = formSchema.safeParse(
+    Object.fromEntries(formData),
+  );
+  if (!success) {
+    return {
+      loginError: null,
+      formError: error.flatten().fieldErrors,
+    };
+  }
+  const { email, password } = data;
+  const { client, headers } = makeSSRClient(request);
+  const { error: loginError } = await client.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (loginError) {
+    return {
+      formError: null,
+      loginError: loginError.message,
+    };
+  }
+  return redirect("/dashboard", { headers });
 };
 
 export default function Login({ actionData }: Route.ComponentProps) {
@@ -51,6 +80,11 @@ export default function Login({ actionData }: Route.ComponentProps) {
                   placeholder="your@email.com"
                   required
                 />
+                {actionData && "formErrors" in actionData && (
+                  <p className="text-sm text-red-500">
+                    {actionData?.formError?.email?.join(", ")}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">비밀번호</Label>
@@ -62,6 +96,11 @@ export default function Login({ actionData }: Route.ComponentProps) {
                   required
                 />
               </div>
+              {actionData && "formErrors" in actionData && (
+                <p className="text-sm text-red-500">
+                  {actionData?.formError?.password?.join(", ")}
+                </p>
+              )}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <LoaderCircle className="animate-spin" />
@@ -72,9 +111,6 @@ export default function Login({ actionData }: Route.ComponentProps) {
                   </>
                 )}
               </Button>
-              {actionData?.message && (
-                <p className="text-sm text-red-500">{actionData.message}</p>
-              )}
             </div>
           </Form>
         </CardContent>

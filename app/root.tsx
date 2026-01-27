@@ -13,6 +13,7 @@ import type { Route } from "./+types/root";
 import styleseet from "./app.css?url";
 import Navigation from "./common/components/navigation";
 import { cn } from "./lib/utils";
+import { makeSSRClient } from "./supa-client";
 
 console.log(styleseet);
 
@@ -48,10 +49,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App({ children }: { children: React.ReactNode }) {
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client } = makeSSRClient(request);
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  return { user };
+};
+
+export default function App({
+  children,
+  loaderData,
+}: {
+  children: React.ReactNode;
+  loaderData: Route.ComponentProps["loaderData"];
+}) {
   const { pathname } = useLocation();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
+  const isLoggedIn = loaderData.user !== null;
   return (
     <div
       className={cn({
@@ -60,7 +76,7 @@ export default function App({ children }: { children: React.ReactNode }) {
       })}
     >
       {pathname.includes("/auth") ? null : (
-        <Navigation children={children} isLoggedIn={true} />
+        <Navigation children={children} isLoggedIn={isLoggedIn} />
       )}
       <div className="w-full">
         <Outlet />

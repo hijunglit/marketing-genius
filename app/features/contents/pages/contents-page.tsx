@@ -1,18 +1,26 @@
-import { PlusIcon, SquarePen, Trash2 } from "lucide-react";
+import { Home, PlusIcon, SquarePen, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "~/common/components/ui/button";
-import { Card } from "~/common/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "~/common/components/ui/card";
 import { Input } from "~/common/components/ui/input";
 import type { Route } from "./+types/contents-page";
 import { getContents } from "../queries";
 import { DateTime } from "luxon";
+import { Separator } from "~/common/components/ui/separator";
+import { makeSSRClient } from "~/supa-client";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "컨텐츠 | Marketing Genius" }];
 };
 
-export const loader = async () => {
-  const contents = await getContents();
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client, headers } = makeSSRClient(request);
+  const contents = await getContents(client);
   return contents;
 };
 
@@ -24,9 +32,17 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
           <h1 className="text-2xl font-bold">내 컨텐츠</h1>
           <p>생성된 컨텐츠를 한 눈에 확인하고 관리세요.</p>
         </div>
-        <div>
-          <Button variant={"outline"}>
-            <PlusIcon /> 새 컨텐츠 만들기
+        <div className="space-x-2.5">
+          <Button asChild>
+            <Link to={"/dashboard"}>
+              <Home />
+              대시보드
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link to={"/posting/create"}>
+              <PlusIcon /> 새 컨텐츠 만들기
+            </Link>
           </Button>
         </div>
       </header>
@@ -44,36 +60,40 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
           </div>
         </section>
         <section>
-          <div className="flex flex-col gap-7">
+          <div className="grid grid-cols-2 gap-2.5">
             {loaderData.map((contents, index) => (
-              <Link to={"/contents/:id"} key={"contents" + index}>
-                <Card>
-                  <div className="flex flex-col justify-between px-4 sm:flex-row">
-                    <div className="flex flex-col items-center sm:flex-row gap-4">
-                      <div className="w-full h-24 sm:size-24 rounded-xl shadow-lg overflow-hidden flex flex-col justify-center">
-                        <img src={contents.images[0].image_url} />
-                      </div>
-                      <div className="flex flex-col space-y-3">
-                        <div className="space-y-2">
-                          <p className="text-lg font-bold">제목</p>
-                          <div className="text-sm text-gray-700">
-                            <span>상품명</span>
-                            <span>|</span>
-                            <span>{contents.text}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs text-gray-500">
-                          {DateTime.fromISO(contents.created_at).toRelative()}
-                        </span>
-                      </div>
+              <Card className="col-span-1">
+                <CardHeader>
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="text-xl font-bold">
+                        {contents.request[0].title}
+                      </p>
+                      <Button className="text-xs">
+                        {contents.request[0].platform}
+                      </Button>
                     </div>
-                    <div className="flex gap-2 justify-end">
-                      <SquarePen size={16} />
+                    <div className="flex gap-1.5">
+                      <Link to={"/contents/:id"} key={"contents" + index}>
+                        <SquarePen size={16} />
+                      </Link>
                       <Trash2 size={16} />
                     </div>
                   </div>
-                </Card>
-              </Link>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-gray-100 p-3 rounded-2xl">
+                    <p>{contents.text}</p>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <div>
+                    <p>{contents.images.length} MEDIA</p>
+                    <p>{contents.hashtag.length} TAGS</p>
+                  </div>
+                  <Separator />
+                </CardFooter>
+              </Card>
             ))}
           </div>
         </section>

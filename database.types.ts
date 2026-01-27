@@ -50,36 +50,25 @@ export type Database = {
         Row: {
           contents_id: number
           created_at: string
-          profile_id: string | null
-          request_prompt: string
+          hashtag: string
           text: string
           updated_at: string
         }
         Insert: {
           contents_id?: never
           created_at?: string
-          profile_id?: string | null
-          request_prompt: string
+          hashtag: string
           text: string
           updated_at?: string
         }
         Update: {
           contents_id?: never
           created_at?: string
-          profile_id?: string | null
-          request_prompt?: string
+          hashtag?: string
           text?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "contents_profile_id_profiles_profile_id_fk"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["profile_id"]
-          },
-        ]
+        Relationships: []
       }
       images: {
         Row: {
@@ -136,28 +125,46 @@ export type Database = {
       }
       request_contents: {
         Row: {
-          ai_id: number | null
+          ai_id: number
+          contents_id: number | null
+          core_message: string
           created_at: string
           is_confirm: boolean
+          platform: string
+          product_name: string
+          profile_id: string
           request_id: number
-          request_prompt: string
-          user_id: string | null
+          target: string
+          template: string
+          title: string
         }
         Insert: {
-          ai_id?: number | null
+          ai_id: number
+          contents_id?: number | null
+          core_message: string
           created_at?: string
           is_confirm: boolean
+          platform: string
+          product_name: string
+          profile_id: string
           request_id?: never
-          request_prompt: string
-          user_id?: string | null
+          target: string
+          template: string
+          title: string
         }
         Update: {
-          ai_id?: number | null
+          ai_id?: number
+          contents_id?: number | null
+          core_message?: string
           created_at?: string
           is_confirm?: boolean
+          platform?: string
+          product_name?: string
+          profile_id?: string
           request_id?: never
-          request_prompt?: string
-          user_id?: string | null
+          target?: string
+          template?: string
+          title?: string
         }
         Relationships: [
           {
@@ -168,8 +175,15 @@ export type Database = {
             referencedColumns: ["ai_id"]
           },
           {
-            foreignKeyName: "request_contents_user_id_profiles_profile_id_fk"
-            columns: ["user_id"]
+            foreignKeyName: "request_contents_contents_id_contents_contents_id_fk"
+            columns: ["contents_id"]
+            isOneToOne: false
+            referencedRelation: "contents"
+            referencedColumns: ["contents_id"]
+          },
+          {
+            foreignKeyName: "request_contents_profile_id_profiles_profile_id_fk"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["profile_id"]
