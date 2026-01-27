@@ -39,8 +39,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
   );
   if (!success) {
     return {
-      loginError: null,
-      formError: error.flatten().fieldErrors,
+      loginErrors: null,
+      formErrors: error.flatten().fieldErrors,
     };
   }
   const { email, password } = data;
@@ -51,7 +51,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   });
   if (loginError) {
     return {
-      formError: null,
+      formErrors: null,
       loginError: loginError.message,
     };
   }
@@ -82,7 +82,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
                 />
                 {actionData && "formErrors" in actionData && (
                   <p className="text-sm text-red-500">
-                    {actionData?.formError?.email?.join(", ")}
+                    {actionData?.formErrors?.email?.join(", ")}
                   </p>
                 )}
               </div>
@@ -98,7 +98,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
               </div>
               {actionData && "formErrors" in actionData && (
                 <p className="text-sm text-red-500">
-                  {actionData?.formError?.password?.join(", ")}
+                  {actionData?.formErrors?.password?.join(", ")}
                 </p>
               )}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -111,6 +111,9 @@ export default function Login({ actionData }: Route.ComponentProps) {
                   </>
                 )}
               </Button>
+              {actionData && "loginError" in actionData && (
+                <p className="text-sm text-red-500">{actionData.loginError}</p>
+              )}
             </div>
           </Form>
         </CardContent>
