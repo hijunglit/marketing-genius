@@ -104,9 +104,9 @@ export function AppSidebar() {
                 <DropdownMenuItem>
                   <span>결제</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span>로그아웃</span>
-                </DropdownMenuItem>
+                <Link to={"/auth/logout"}>
+                  <DropdownMenuItem>로그아웃</DropdownMenuItem>
+                </Link>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
