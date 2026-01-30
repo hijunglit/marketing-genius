@@ -10,7 +10,7 @@ import {
   NotebookText,
   PlusIcon,
 } from "lucide-react";
-import { isRouteErrorResponse, Link } from "react-router";
+import { isRouteErrorResponse, Link, redirect } from "react-router";
 import { Button } from "~/common/components/ui/button";
 import {
   Card,
@@ -22,6 +22,7 @@ import type { Route } from "./+types/dashboard-page";
 import { getContents } from "~/features/contents/queries";
 import { makeSSRClient } from "~/supa-client";
 import { DateTime } from "luxon";
+import { getUserById } from "../queries";
 
 const top_items = [
   {
@@ -71,7 +72,13 @@ const quick_run_items = [
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { client, headers } = makeSSRClient(request);
-  const contents = await getContents(client);
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) {
+    return redirect("/auth/login");
+  }
+  const contents = await getContents(client, { id: user?.id });
   return contents;
 };
 

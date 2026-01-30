@@ -1,5 +1,5 @@
 import { Home, PlusIcon, SquarePen, Trash2 } from "lucide-react";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import { Button } from "~/common/components/ui/button";
 import {
   Card,
@@ -20,7 +20,11 @@ export const meta: Route.MetaFunction = () => {
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
   const { client, headers } = makeSSRClient(request);
-  const contents = await getContents(client);
+  const { data: { user }, } = await client.auth.getUser();
+  if (!user) {
+    return redirect("/auth/login")
+  }
+  const contents = await getContents(client, {id: user?.id});
   return contents;
 };
 
@@ -62,7 +66,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
         <section>
           <div className="grid grid-cols-2 gap-2.5">
             {loaderData.map((contents, index) => (
-              <Card className="col-span-1">
+              <Card className="col-span-1" key={"contents" + index}>
                 <CardHeader>
                   <div className="flex justify-between">
                     <div>

@@ -56,11 +56,11 @@ const items = [
     url: "/marketer/create",
     icon: Bot,
   },
-  {
-    title: "설정",
-    url: "#",
-    icon: Settings,
-  },
+  // {
+  //   title: "설정",
+  //   url: "#",
+  //   icon: Settings,
+  // },
 ];
 
 export function AppSidebar({
@@ -108,8 +108,8 @@ export function AppSidebar({
                       <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
                     )}
                   </Avatar>
-                  {name}
-                  {email}
+                  <p>{name}</p>
+                  <p>{email}</p>
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

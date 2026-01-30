@@ -1,8 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import browserClient, { type Database } from "~/supa-client";
+import type { Database } from "~/supa-client";
 
-export const getContents = async (client: SupabaseClient<Database>) => {
-  const { data, error } = await browserClient.from("contents").select(`
+export const getContents = async (
+  client: SupabaseClient<Database>,
+  { id }: { id: string },
+) => {
+  const { data, error } = await client.from("contents").select(`
       request_contents!inner(
         title,
         platform,
@@ -14,8 +17,9 @@ export const getContents = async (client: SupabaseClient<Database>) => {
         image_url
       ),
       created_at
-    `);
-  console.log(data, error);
+    `)
+    .eq("request_contents.profile_id", id)
+    .eq("request_contents.is_confirm", true);
   if (error) throw new Error(error.message);
   return data;
 };
