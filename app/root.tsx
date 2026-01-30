@@ -14,8 +14,7 @@ import styleseet from "./app.css?url";
 import Navigation from "./common/components/navigation";
 import { cn } from "./lib/utils";
 import { makeSSRClient } from "./supa-client";
-
-console.log(styleseet);
+import { getUserById } from "./features/users/queries";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,7 +53,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const {
     data: { user },
   } = await client.auth.getUser();
-  return { user };
+  if (user) {
+    const profile = await getUserById(client, { id: user?.id });
+    return { user, profile };
+  }
+  return { user: null, profile: null };
 };
 
 export default function App({
@@ -76,7 +79,14 @@ export default function App({
       })}
     >
       {pathname.includes("/auth") ? null : (
-        <Navigation children={children} isLoggedIn={isLoggedIn} />
+        <Navigation
+          children={children}
+          isLoggedIn={isLoggedIn}
+          name={loaderData.profile?.name}
+          username={loaderData.profile?.username}
+          avatar={loaderData.profile?.avatar_url}
+          email={loaderData.user?.email}
+        />
       )}
       <div className="w-full">
         <Outlet />

@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Link } from "react-router";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 // Menu items.
 const items = [
@@ -62,7 +63,17 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({
+  name,
+  username,
+  avatar,
+  email,
+}: {
+  name?: string;
+  username?: string;
+  avatar?: string;
+  email?: string;
+}) {
   return (
     <Sidebar>
       <SidebarContent>
@@ -89,8 +100,16 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <User2 /> Username
+                <SidebarMenuButton className="h-fit">
+                  <Avatar>
+                    {avatar ? (
+                      <AvatarImage src={avatar} />
+                    ) : (
+                      <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  {name}
+                  {email}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

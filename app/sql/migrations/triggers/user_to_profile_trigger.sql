@@ -6,9 +6,15 @@ set search_path = ''
 as $$
 begin 
     if new.raw_app_meta_data is not null then
+    -- ? : JSON객체에 특정 키가 있는지 알려줌 ->>: JSON객체의 특정 키에서 값을 뽑아줌 --
         if new.raw_app_meta_data ? 'provider' AND new.raw_app_meta_data ->> 'provider' = 'email' then
-            insert into public.profiles(profile_id, name, username)
-            values(new.id, 'Anonnymous', 'Anonnymous');
+            if new.raw_user_meta_data ? 'name' AND new.raw_user_meta_data ? 'username' then
+                insert into public.profiles(profile_id, name, username)
+                values(new.id, new.raw_user_meta_data ->> 'name', new.raw_user_meta_data ->> 'username');
+            else
+                insert into public.profiles(profile_id, name, username)
+                values(new.id, 'Anonnymous', 'mr.' || substr(md5(random()::text), 1, 8));
+            end if;
         end if;
     end if;
     return new;
