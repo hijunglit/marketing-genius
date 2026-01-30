@@ -16,7 +16,7 @@ import { makeSSRClient } from "~/supa-client";
 import { checkUsernameExists } from "../queries";
 
 const formSchema = z.object({
-  name: z.string().min(2).max(4),
+  name: z.string().min(2).max(20),
   username: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
@@ -46,8 +46,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
     password: data.password,
     options: {
       data: {
-        name: data.username,
-        username: data.password,
+        name: data.name,
+        username: data.username,
       },
     },
   });
@@ -117,7 +117,7 @@ export default function join({ actionData }: Route.ComponentProps) {
                 </p>
               )}
             </div>
-            <div>
+            <div className="col-span-2">
               <label htmlFor="password">비밀번호</label>
               <Input
                 type="password"
@@ -131,16 +131,6 @@ export default function join({ actionData }: Route.ComponentProps) {
                   {actionData?.formErrors?.password}
                 </p>
               )}
-            </div>
-            <div>
-              <label htmlFor="check_password">비밀번호 확인</label>
-              <Input
-                type="password"
-                id="check_password"
-                name="check_password"
-                placeholder="비밀번호를 다시 입력하세요"
-                required
-              />
             </div>
             <Button
               type="submit"

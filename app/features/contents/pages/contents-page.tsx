@@ -67,10 +67,10 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                   <div className="flex justify-between">
                     <div>
                       <p className="text-xl font-bold">
-                        {contents.request[0].title}
+                        {contents.request_contents[0].title}
                       </p>
                       <Button className="text-xs">
-                        {contents.request[0].platform}
+                        {contents.request_contents[0].platform}
                       </Button>
                     </div>
                     <div className="flex gap-1.5">

@@ -4,8 +4,10 @@ import {
   Calendar,
   CardSimIcon,
   ChevronRightIcon,
+  Clock,
   ClockIcon,
   File,
+  NotebookText,
   PlusIcon,
 } from "lucide-react";
 import { isRouteErrorResponse, Link } from "react-router";
@@ -17,6 +19,9 @@ import {
   CardHeader,
 } from "~/common/components/ui/card";
 import type { Route } from "./+types/dashboard-page";
+import { getContents } from "~/features/contents/queries";
+import { makeSSRClient } from "~/supa-client";
+import { DateTime } from "luxon";
 
 const top_items = [
   {
@@ -33,8 +38,14 @@ const top_items = [
   },
   {
     icon: Calendar,
-    enTitle: "Weekly",
-    koTitle: "이번 주 활동",
+    enTitle: "Scheduled",
+    koTitle: "예약됨",
+    amount: 1,
+  },
+  {
+    icon: Clock,
+    enTitle: "Published",
+    koTitle: "발행 완료",
     amount: 1,
   },
 ];
@@ -53,17 +64,18 @@ const quick_run_items = [
     title: "마케터 생성",
   },
   {
-    icon: Bot,
+    icon: NotebookText,
     title: "마케터 관리",
   },
 ];
 
-export const loader = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  return;
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client, headers } = makeSSRClient(request);
+  const contents = await getContents(client);
+  return contents;
 };
 
-export default function Dashboard() {
+export default function Dashboard({ loaderData }: Route.ComponentProps) {
   return (
     <div className="p-20 space-y-10">
       <header className="flex justify-between items-center">
@@ -116,22 +128,29 @@ export default function Dashboard() {
             </Link>
           </div>
           <div className="flex flex-col gap-7">
-            {Array.from({ length: 5 }).map((_, index) => (
+            {loaderData.map((contents, index) => (
               <Link to={"/contents/:id"} key={"contents" + index}>
                 <Card>
                   <div className="flex justify-between px-4">
                     <div className="flex">
                       <div className="flex items-center gap-4">
                         <div className="size-12 rounded-xl shadow-lg overflow-hidden">
-                          <img src="https://i.pinimg.com/736x/ec/5f/b6/ec5fb6c189249e061bcce0159cac38ec.jpg" />
-                          {/* <img src="https://i.pinimg.com/736x/9c/3b/72/9c3b7274384a0bab197fd68115a395ff.jpg" /> */}
+                          <img src={contents.images[0].image_url} />
                         </div>
                         <div>
-                          <p className="text-sm font-bold">제목</p>
-                          <span className="text-xs">상품명</span>
+                          <p className="text-sm font-bold">
+                            {contents.request_contents[0].title}
+                          </p>
+                          <span className="text-xs">
+                            {contents.request_contents[0].product_name}
+                          </span>
                           <div className="flex items-center text-xs">
                             <ClockIcon size={10} />
-                            <span>2026.1.1</span>
+                            <span>
+                              {DateTime.fromISO(
+                                contents.created_at,
+                              ).toRelative()}
+                            </span>
                           </div>
                         </div>
                       </div>

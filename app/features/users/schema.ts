@@ -7,7 +7,7 @@ const users = pgSchema("auth").table("users", {
 export const profiles = pgTable("profiles", {
   profile_id: uuid()
     .primaryKey()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "cascade" }),
   name: text().notNull(),
   username: text().notNull(),
   avatar_url: text().notNull().default("https://github.com/annonymous"),

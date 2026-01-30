@@ -11,10 +11,33 @@ import { Button } from "~/common/components/ui/button";
 import { Input } from "~/common/components/ui/input";
 import { Label } from "~/common/components/ui/label";
 import { Building2 } from "lucide-react";
+import { Textarea } from "~/common/components/ui/textarea";
+import z from "zod";
+import { makeSSRClient } from "~/supa-client";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Create Marketer" }];
 }
+
+const formSchema = z.object({
+  companyName: z.string(),
+  category: z.string(),
+  coreService: z.string(),
+  aboutCompany: z.string(),
+});
+
+const action = async ({ request }: Route.ActionArgs) => {
+  const formData = await request.formData();
+  const { success, data, error } = formSchema.safeParse(
+    Object.fromEntries(formData),
+  );
+  if (!success) {
+    return {
+      formErrors: error.flatten().fieldErrors,
+    };
+  }
+  const { client } = makeSSRClient(request);
+};
 
 export default function CreateMarketerPage({}: Route.ComponentProps) {
   return (
@@ -29,9 +52,9 @@ export default function CreateMarketerPage({}: Route.ComponentProps) {
         </CardHeader>
         <CardContent>
           <Form method="post" className="space-y-5">
-            <div className="bg-blue-100 p-6 rounded-2xl space-y-4 border-2 border-blue-200">
+            <div className="bg-gray-100 p-6 rounded-2xl space-y-4 border-2 border-gray-200">
               <div className="flex items-center gap-2">
-                <div className="rounded-xl bg-blue-200 p-2">
+                <div className="rounded-xl bg-gray-200 p-2">
                   <Building2 size={28} />
                 </div>
                 <h2 className="font-bold text-xl">기본 정보</h2>
@@ -39,35 +62,44 @@ export default function CreateMarketerPage({}: Route.ComponentProps) {
 
               <div className="space-y-5">
                 <div className="space-y-4">
+                  <Label htmlFor="companyName">기업명</Label>
+                  <Input
+                    name="companyName"
+                    id="companyName"
+                    type="text"
+                    placeholder="예: 커피전문점"
+                    className="border-gray-300 border-2 p-6"
+                    required
+                  />
+                </div>
+                <div className="space-y-4">
                   <Label htmlFor="category">업종</Label>
                   <Input
                     name="category"
                     id="category"
                     type="text"
                     placeholder="예: 커피전문점"
-                    className="border-blue-200 border-2 p-6"
+                    className="border-gray-300 border-2 p-6"
                     required
                   />
                 </div>
                 <div className="space-y-4">
-                  <Label htmlFor="mainItem">주력 상품/서비스</Label>
+                  <Label htmlFor="coreService">주력 상품/서비스</Label>
                   <Input
-                    name="mainItem"
-                    id="mainItem"
+                    name="coreService"
+                    id="coreService"
                     type="text"
                     placeholder="예: 시그니처 커피, 특색 음료"
-                    className="border-blue-200 border-2 p-6"
+                    className="border-gray-300 border-2 p-6"
                     required
                   />
                 </div>
                 <div className="space-y-4">
-                  <Label htmlFor="company">기업 정보 설명</Label>
-                  <Input
-                    name="company"
-                    id="company"
-                    type="text"
-                    placeholder="기업의 특징, 비즈니스 모델, 배경등을 설명해주세요"
-                    className="border-blue-200 border-2 p-6"
+                  <Label htmlFor="aboutCompany">기업 정보 설명</Label>
+                  <Textarea
+                    id="aboutCompany"
+                    placeholder="기업의 특징, 비즈니스 모델, 특별한 배경 등을 설명해주세요."
+                    rows={10}
                     required
                   />
                 </div>

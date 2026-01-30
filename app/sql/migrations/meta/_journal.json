@@ -8,6 +8,20 @@
       "when": 1769411247743,
       "tag": "0000_ambiguous_hex",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769767859341,
+      "tag": "0001_dazzling_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769773473360,
+      "tag": "0002_complete_wolfsbane",
+      "breakpoints": true
     }
   ]
 }
