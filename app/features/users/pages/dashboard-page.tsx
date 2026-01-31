@@ -55,18 +55,22 @@ const quick_run_items = [
   {
     icon: PlusIcon,
     title: "포스팅 생성",
+    url: "/posting/create"
   },
   {
     icon: Archive,
     title: "포스팅 관리",
+    url: "/contents"
   },
   {
     icon: Bot,
     title: "마케터 생성",
+    url: "/marketer/create"
   },
   {
     icon: NotebookText,
     title: "마케터 관리",
+    url: "/marketer"
   },
 ];
 
@@ -91,8 +95,10 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           <p>오늘의 마케팅 현황을 한눈에 확인하세요.</p>
         </div>
         <div>
-          <Button variant={"outline"}>
-            <PlusIcon /> 새 포스팅
+          <Button asChild>
+            <Link to={"/posting/create"}>
+              <PlusIcon /> 새 포스팅
+              </Link>
           </Button>
         </div>
       </header>
@@ -118,7 +124,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           <div className="grid lg:grid-cols-4 md:grid-cols-2 sm:grid-cols-1 gap-6">
             {quick_run_items.map((item, index) => (
               <Card className="w-full" key={`quickstart-${index}`}>
-                <Link to={"#"}>
+                <Link to={item.url}>
                   <item.icon className="m-auto" />
                   <p className="text-center">{item.title}</p>
                 </Link>

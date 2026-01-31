@@ -100,16 +100,18 @@ export function AppSidebar({
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="h-fit">
+                <SidebarMenuButton className="h-fit flex">
                   <Avatar>
                     {avatar ? (
-                      <AvatarImage src={avatar} />
+                      <AvatarImage src={avatar} alt="Avatar" />
                     ) : (
                       <AvatarFallback>{name?.charAt(0)}</AvatarFallback>
                     )}
                   </Avatar>
-                  <p>{name}</p>
-                  <p>{email}</p>
+                  <div>
+                    <p className="font-bold text-[13px]">{name}</p>
+                    <p className="font-light text-[11px]">{email}</p>
+                  </div>
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
