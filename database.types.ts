@@ -22,7 +22,7 @@ export type Database = {
           company_name: string
           core_service: string
           created_at: string
-          profiles_id: string | null
+          profiles_id: string
           updated_at: string
         }
         Insert: {
@@ -32,7 +32,7 @@ export type Database = {
           company_name: string
           core_service: string
           created_at?: string
-          profiles_id?: string | null
+          profiles_id: string
           updated_at?: string
         }
         Update: {
@@ -42,7 +42,7 @@ export type Database = {
           company_name?: string
           core_service?: string
           created_at?: string
-          profiles_id?: string | null
+          profiles_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -152,7 +152,7 @@ export type Database = {
           contents_id?: number | null
           core_message: string
           created_at?: string
-          is_confirm: boolean
+          is_confirm?: boolean
           platform: string
           product_name: string
           profile_id: string

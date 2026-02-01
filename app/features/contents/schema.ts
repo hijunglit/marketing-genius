@@ -23,7 +23,7 @@ export const images = pgTable("images", {
   image_id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
   image_url: text().notNull(),
   contents_id: bigint({ mode: "number" }).references(
-    () => contents.contents_id,
+    () => contents.contents_id
   ),
 });
 
@@ -32,7 +32,7 @@ export const requestContents = pgTable("request_contents", {
     .primaryKey()
     .generatedAlwaysAsIdentity(),
   contents_id: bigint({ mode: "number" }).references(
-    () => contents.contents_id,
+    () => contents.contents_id
   ),
   profile_id: uuid()
     .references(() => profiles.profile_id)
@@ -46,7 +46,7 @@ export const requestContents = pgTable("request_contents", {
   product_name: text().notNull(),
   target: text().notNull(),
   core_message: text().notNull(),
-  is_confirm: boolean().notNull(),
+  is_confirm: boolean().notNull().default(false),
   created_at: timestamp().notNull().defaultNow(),
 });
 

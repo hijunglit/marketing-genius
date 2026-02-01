@@ -1,0 +1,1 @@
+ALTER TABLE "request_contents" ALTER COLUMN "is_confirm" SET DEFAULT false;
