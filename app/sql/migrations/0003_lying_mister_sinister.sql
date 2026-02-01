@@ -1,0 +1,1 @@
+ALTER TABLE "ai" ALTER COLUMN "profiles_id" SET NOT NULL;

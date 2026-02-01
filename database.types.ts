@@ -17,21 +17,30 @@ export type Database = {
       ai: {
         Row: {
           ai_id: number
-          create_prompt: string
+          category: string
+          company_description: string
+          company_name: string
+          core_service: string
           created_at: string
           profiles_id: string | null
           updated_at: string
         }
         Insert: {
           ai_id?: never
-          create_prompt: string
+          category: string
+          company_description: string
+          company_name: string
+          core_service: string
           created_at?: string
           profiles_id?: string | null
           updated_at?: string
         }
         Update: {
           ai_id?: never
-          create_prompt?: string
+          category?: string
+          company_description?: string
+          company_name?: string
+          core_service?: string
           created_at?: string
           profiles_id?: string | null
           updated_at?: string

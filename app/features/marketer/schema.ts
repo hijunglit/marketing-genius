@@ -3,7 +3,9 @@ import { profiles } from "../users/schema";
 
 export const ai = pgTable("ai", {
   ai_id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
-  profiles_id: uuid().references(() => profiles.profile_id),
+  profiles_id: uuid()
+    .references(() => profiles.profile_id)
+    .notNull(),
   company_name: text().notNull(),
   category: text().notNull(),
   core_service: text().notNull(),
