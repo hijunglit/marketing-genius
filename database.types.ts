@@ -22,7 +22,7 @@ export type Database = {
           company_name: string
           core_service: string
           created_at: string
-          profiles_id: string
+          profile_id: string
           updated_at: string
         }
         Insert: {
@@ -32,7 +32,7 @@ export type Database = {
           company_name: string
           core_service: string
           created_at?: string
-          profiles_id: string
+          profile_id: string
           updated_at?: string
         }
         Update: {
@@ -42,13 +42,13 @@ export type Database = {
           company_name?: string
           core_service?: string
           created_at?: string
-          profiles_id?: string
+          profile_id?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "ai_profiles_id_profiles_profile_id_fk"
-            columns: ["profiles_id"]
+            foreignKeyName: "ai_profile_id_profiles_profile_id_fk"
+            columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["profile_id"]
@@ -204,7 +204,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      confirm_request_contents: {
+        Args: { p_hashtag: string; p_request_id: number; p_text: string }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,7 +1,7 @@
 import type { Route } from "./+types/create-posting-page";
 import { Button } from "~/common/components/ui/button";
-import { useState } from "react";
-import { Link, useFetcher, redirect } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useFetcher, redirect, Form, useLoaderData } from "react-router";
 import { Separator } from "~/common/components/ui/separator";
 import { Input } from "~/common/components/ui/input";
 import { Label } from "~/common/components/ui/label";
@@ -15,15 +15,16 @@ import {
 } from "lucide-react";
 import {
   generatePosting,
-  uploadImages,
   createRequestContents,
   confirmPosting,
   type PostingResponse,
 } from "../mutations";
 import z from "zod";
-import { makeSSRClient } from "~/supa-client";
+import browserClient, { makeSSRClient } from "~/supa-client";
 import { getLoggedInUser } from "~/features/users/queries";
 import { PLATFORM_TYPE, TEMPLATE_TYPE } from "../constants";
+import { getMarketer } from "~/features/marketer/queries";
+import { createBrowserClient } from "@supabase/ssr";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "포스팅 생성" }];
@@ -39,14 +40,26 @@ const generateSchema = z.object({
   aiId: z.coerce.number(),
 });
 
-const confirmSchema = z.object({
-  intent: z.literal("confirm"),
-  requestId: z.coerce.number(),
-  title: z.string(),
-  text: z.string(),
-  hashtags: z.string(), // JSON string
-  imageUrls: z.string(), // JSON string
-});
+const confirmSchema = z.discriminatedUnion("stage", [
+  z.object({
+    intent: z.literal("confirm"),
+    stage: z.literal("plan"),
+    requestId: z.coerce.number(),
+    title: z.string(),
+    text: z.string(),
+    hashtags: z.string(), // JSON string
+    fileMeta: z.string(), // JSON string
+  }),
+  z.object({
+    intent: z.literal("confirm"),
+    stage: z.literal("finalize"),
+    requestId: z.coerce.number(),
+    title: z.string(),
+    text: z.string(),
+    hashtags: z.string(), // JSON string
+    imageUrls: z.string(), // JSON string
+  }),
+]);
 
 const regenerateSchema = z.object({
   intent: z.literal("regenerate"),
@@ -84,8 +97,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
       // 이미지 업로드
       const files = formData.getAll("files") as File[];
       let imageUrls: string[] = [];
-      if (files.length > 0 && files[0].size > 0) {
-        imageUrls = await uploadImages(client, files, userId);
+      if (files && files instanceof File) {
+        if (files.size <= 5097152 && files.type.startsWith("image/")) {
+        }
       }
 
       // request_contents INSERT
@@ -131,7 +145,38 @@ export const action = async ({ request }: Route.ActionArgs) => {
       if (!parsed.success) {
         return { ok: false, error: "확인 데이터가 올바르지 않습니다" };
       }
+
+      if (parsed.data.stage === "plan") {
+        const fileMeta = JSON.parse(parsed.data.fileMeta) as Array<{
+          name: string;
+          type: string;
+          size: number;
+        }>;
+        if (fileMeta.length === 0)
+          return { ok: false, error: "이미지는 필수입니다." };
+        const bucket = "posting-images";
+        const targets = await Promise.all(
+          fileMeta.map(async (m, order) => {
+            const ext = (m.name.split(".").pop() || "jpg").toLowerCase();
+            const path = `posting/${parsed.data.requestId}/${crypto.randomUUID}.${ext}`;
+
+            const { data, error } = await client.storage
+              .from(bucket)
+              .createSignedUploadUrl(path);
+            if (error) throw error;
+
+            return { order, path, token: data.token };
+          })
+        );
+        return { ok: true, intent: "confirm", stage: "plan", bucket, targets };
+      }
+
+      // finalize
       const { requestId, text, hashtags, imageUrls } = parsed.data;
+
+      if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+        return { ok: false, error: "이미지는 필수입니다." };
+      }
 
       await confirmPosting(client, {
         requestId,
@@ -193,11 +238,29 @@ export const action = async ({ request }: Route.ActionArgs) => {
   }
 };
 
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client, headers } = makeSSRClient(request);
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+
+  const env = {
+    SUPABASE_URL: process.env.SUPABASE_URL!,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+  };
+
+  if (!user) {
+    return redirect("/auth/login");
+  }
+  const marketer = await getMarketer(client, { id: user?.id });
+  return { marketer, env };
+};
+
 type Payload = {
   platform: "instagram" | null;
   template: "basic" | "list" | "image" | "question" | "tip-knowhow" | null;
   requestForm: {
-    files: FileList | null;
+    files: File[] | null;
     productName: string;
     targetCustomer: string;
     coreCharacter: string;
@@ -246,7 +309,7 @@ function ChoiceButton({
         cursor: "pointer",
       }}
     >
-      <img src={img} />
+      <img src={""} alt={img} />
       <div>
         <h3>{title}</h3>
         <p>{description}</p>
@@ -255,7 +318,11 @@ function ChoiceButton({
   );
 }
 
-export default function CreatePostingPage({}: Route.ComponentProps) {
+export default function CreatePostingPage({
+  loaderData,
+}: Route.ComponentProps) {
+  const isMarketerExist = loaderData.marketer.length > 0;
+  let aiId: number;
   const fetcher = useFetcher<ActionData>();
   const [step, setStep] = useState(1);
   const [payload, setPayload] = useState<Payload>({
@@ -263,9 +330,84 @@ export default function CreatePostingPage({}: Route.ComponentProps) {
     template: null,
     requestForm: null,
   });
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadUrls, setUploadUrls] = useState<string[]>([]);
+  const { env } = useLoaderData<typeof loader>();
+  const supabase = useMemo(() => {
+    return createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
+  }, [env.SUPABASE_URL, env.SUPABASE_ANON_KEY]);
+
+  useEffect(() => {
+    const data = fetcher.data as any;
+    console.log("confirm actions response: ", data);
+    if (!data || data.intent !== "confirm" || data.stage !== "plan") return;
+
+    (async () => {
+      const { bucket, targets } = data as {
+        bucket: string;
+        targets: Array<{ order: number; path: string; token: string }>;
+      };
+
+      for (const t of targets) {
+        const file = selectedFiles[t.order];
+        const { error } = await supabase.storage
+          .from(bucket)
+          .uploadToSignedUrl(t.path, t.token, file, {
+            contentType: file.type,
+            upsert: false,
+          });
+
+        if (error) throw error;
+      }
+      const urls = targets.map(
+        (t) => supabase.storage.from(bucket).getPublicUrl(t.path).data.publicUrl
+      );
+
+      // public urls
+      setUploadUrls(urls);
+
+      if (!fetcher.data?.preview || !fetcher.data?.requestId) return;
+
+      const formData = new FormData();
+      formData.append("intent", "confirm");
+      formData.append("stage", "finalize");
+      formData.append("requestId", String(data.request_id));
+      formData.append("title", data.title);
+      formData.append("text", data.text);
+      formData.append("hashtag", JSON.stringify(data.hashtags));
+      formData.append("imageUrls", JSON.stringify(uploadUrls));
+
+      fetcher.submit(formData, { method: "post" });
+    })().catch((e) => {});
+    return () => previewUrls.forEach((u) => URL.revokeObjectURL(u));
+  }, [fetcher.data, selectedFiles, supabase]);
+
+  const onFileChanges = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    setSelectedFiles(files);
+    setPreviewUrls((prev) => {
+      prev.forEach((u) => URL.revokeObjectURL(u));
+      return files.map((f) => URL.createObjectURL(f));
+    });
+    setUploadUrls([]);
+    setPayload((p) => ({
+      ...p,
+      requestForm: {
+        ...p.requestForm,
+        files: [],
+        productName: p.requestForm?.productName || "",
+        targetCustomer: p.requestForm?.targetCustomer || "",
+        coreCharacter: p.requestForm?.coreCharacter || "",
+      },
+      files,
+    }));
+  };
 
   // TODO: 실제로는 마케터 선택 UI가 필요하지만, 임시로 하드코딩
-  const aiId = 1;
+  if (isMarketerExist) {
+    aiId = loaderData.marketer[0].ai_id;
+  }
 
   const isFormComplete =
     payload.requestForm?.files &&
@@ -284,16 +426,13 @@ export default function CreatePostingPage({}: Route.ComponentProps) {
     formData.append("intent", "generate");
     formData.append("platform", payload.platform);
     formData.append("template", payload.template);
+    // Array.from(payload.requestForm.files || []).forEach((file) => {
+    //   formData.append("files", file);
+    // });
     formData.append("productName", payload.requestForm.productName);
     formData.append("targetCustomer", payload.requestForm.targetCustomer);
     formData.append("coreCharacter", payload.requestForm.coreCharacter);
     formData.append("aiId", String(aiId));
-
-    if (payload.requestForm.files) {
-      Array.from(payload.requestForm.files).forEach((file) => {
-        formData.append("files", file);
-      });
-    }
 
     fetcher.submit(formData, { method: "post" });
   };
@@ -301,14 +440,22 @@ export default function CreatePostingPage({}: Route.ComponentProps) {
   // 확정하기 submit
   const handleConfirm = () => {
     if (!fetcher.data?.preview || !fetcher.data?.requestId) return;
+    if (selectedFiles.length === 0) return;
+
+    const fileMeta = selectedFiles.map((f) => ({
+      name: f.name,
+      type: f.type,
+      size: f.size,
+    }));
 
     const formData = new FormData();
     formData.append("intent", "confirm");
+    formData.append("stage", "plan");
     formData.append("requestId", String(fetcher.data.requestId));
     formData.append("title", fetcher.data.preview.title);
     formData.append("text", fetcher.data.preview.text);
     formData.append("hashtags", JSON.stringify(fetcher.data.preview.hashtags));
-    formData.append("imageUrls", JSON.stringify(fetcher.data.imageUrls || []));
+    formData.append("fileMeta", JSON.stringify(fileMeta));
 
     fetcher.submit(formData, { method: "post" });
   };
@@ -346,399 +493,423 @@ export default function CreatePostingPage({}: Route.ComponentProps) {
   const submitting = fetcher.state !== "idle";
   return (
     <div className="p-20 space-y-10">
-      <header className="flex justify-between">
-        <div className="space-y-3">
-          <h1 className="font-extrabold text-4xl">새 포스팅 생성</h1>
-          <p className="text-lg text-gray-500">
-            기업 정보를 기반으로 소셜 미디어 포스팅을 자동으로 생성합니다.
-          </p>
-        </div>
-        <div className="space-x-2.5">
-          <Button className="p-6" asChild>
-            <Link to={"/dashboard"}>
-              <LayoutDashboard />
-              대시보드
-            </Link>
-          </Button>
-          <Button className="p-6" asChild>
-            <Link to={"/contents"}>
-              <ArrowLeft />
-              목록으로
-            </Link>
-          </Button>
-        </div>
-      </header>
-      <main className="space-y-10">
-        {/* Progress */}
-        <div className="flex justify-around shadow-2xl border rounded-2xl p-[50px]">
-          {progress.map((n) => (
-            <div key={n.step} className="flex flex-col items-center">
-              <div
-                className={`w-[50px] h-[50px] rounded-[50%] ${n.step <= step ? "bg-primary" : "bg-gray-400"} border-2 border-black flex flex-col justify-center text-center`}
-              >
-                <p className="font-bold text-white">{n.step}</p>
-              </div>
-              <p>{n.text}</p>
-            </div>
-            // <div
-            //   key={n.step}
-            //   style={{
-            //     flex: 1,
-            //     height: 8,
-            //     borderRadius: 999,
-            //     background: n.step <= step ? "black" : "#e5e5e5",
-            //     opacity: n.step <= step ? 1 : 0.6,
-            //   }}
-            //   />
-          ))}
-        </div>
-
-        {/* Step 1 */}
-        {step === 1 && (
-          <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
+      {isMarketerExist ? (
+        <>
+          <header className="flex justify-between">
             <div className="space-y-3">
-              <h2 className="font-extrabold text-3xl">플랫폼 선택</h2>
+              <h1 className="font-extrabold text-4xl">새 포스팅 생성</h1>
               <p className="text-lg text-gray-500">
-                포스팅할 플랫폼을 선택하세요
+                기업 정보를 기반으로 소셜 미디어 포스팅을 자동으로 생성합니다.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <ChoiceButton
-                active={payload.platform === "instagram"}
-                onClick={() =>
-                  setPayload((p) => ({ ...p, platform: "instagram" }))
-                }
-                img=""
-                title="인스타그램"
-                description="이미지 중심의 짧은 컨텐츠"
-              />
-            </div>
-            <Separator />
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                onClick={next}
-                disabled={payload.platform === null}
-                className="p-8 text-lg"
-              >
-                다음 단계 <ArrowRight />
+            <div className="space-x-2.5">
+              <Button className="p-6" asChild>
+                <Link to={"/dashboard"}>
+                  <LayoutDashboard />
+                  대시보드
+                </Link>
+              </Button>
+              <Button className="p-6" asChild>
+                <Link to={"/contents"}>
+                  <ArrowLeft />
+                  목록으로
+                </Link>
               </Button>
             </div>
-          </section>
-        )}
-
-        {/* Step 2 */}
-        {step === 2 && (
-          <section className="space-y-10">
-            <div>
-              <h2 style={{ fontSize: 18, fontWeight: 600 }}>템플릿 선택</h2>
-              <p>포스팅 스타일에 맞는 템플릿을 선택하세요</p>
-            </div>
-            <div className="grid grid-cols-3 gap-5">
-              <ChoiceButton
-                active={payload.template === "basic"}
-                onClick={() => setPayload((p) => ({ ...p, template: "basic" }))}
-                img=""
-                title="기본 포맷"
-                description="간단하고 깔끔한 기본 포스팅 형식"
-              />
-              <ChoiceButton
-                active={payload.template === "list"}
-                onClick={() => setPayload((p) => ({ ...p, template: "list" }))}
-                img=""
-                title="스토리텔링"
-                description="이야기 형식으로 풀어가는 감성적인 포스팅"
-              />
-              <ChoiceButton
-                active={payload.template === "image"}
-                onClick={() => setPayload((p) => ({ ...p, template: "image" }))}
-                img=""
-                title="리스트형"
-                description="정보를 리스트로 정리한 실용적인 포맷"
-              />
-              <ChoiceButton
-                active={payload.template === "question"}
-                onClick={() =>
-                  setPayload((p) => ({ ...p, template: "question" }))
-                }
-                img=""
-                title="팁 & 노하우"
-                description="실용적인 팁과 노하우를 전달하는 포맷"
-              />
-              <ChoiceButton
-                active={payload.template === "tip-knowhow"}
-                onClick={() =>
-                  setPayload((p) => ({ ...p, template: "tip-knowhow" }))
-                }
-                img=""
-                title="기본 포맷"
-                description=""
-              />
-            </div>
-            <Separator />
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                onClick={back}
-                disabled={false}
-                variant={"secondary"}
-                className="p-6"
-              >
-                이전
-              </Button>
-              <Button
-                type="button"
-                onClick={next}
-                disabled={payload.template === null}
-                variant={"secondary"}
-                className="p-6"
-              >
-                다음 <ArrowRight />
-              </Button>
-            </div>
-          </section>
-        )}
-
-        {/* Step 3 */}
-        {step === 3 && (
-          <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
-            <div className="space-y-3">
-              <h2 className="font-extrabold text-3xl">컨텐츠 작성</h2>
-              <p className="text-lg text-gray-500">
-                포스팅에 필요한 세부 정보를 입력하세요
-              </p>
+          </header>
+          <main className="space-y-10">
+            {/* Progress */}
+            <div className="flex justify-around shadow-2xl border rounded-2xl p-[50px]">
+              {progress.map((n) => (
+                <div key={n.step} className="flex flex-col items-center">
+                  <div
+                    className={`w-[50px] h-[50px] rounded-[50%] ${n.step <= step ? "bg-primary" : "bg-gray-400"} border-2 border-black flex flex-col justify-center text-center`}
+                  >
+                    <p className="font-bold text-white">{n.step}</p>
+                  </div>
+                  <p>{n.text}</p>
+                </div>
+                // <div
+                //   key={n.step}
+                //   style={{
+                //     flex: 1,
+                //     height: 8,
+                //     borderRadius: 999,
+                //     background: n.step <= step ? "black" : "#e5e5e5",
+                //     opacity: n.step <= step ? 1 : 0.6,
+                //   }}
+                //   />
+              ))}
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="files">이미지 업로드</Label>
-                <Input
-                  id="files"
-                  name="files"
-                  placeholder="파일 선택"
-                  type="file"
-                  accept="image/png, image/jpeg"
-                  multiple
-                  onChange={(e) =>
-                    setPayload((p) => ({
-                      ...p,
-                      requestForm: {
-                        ...p.requestForm,
-                        files: e.target.files,
-                        productName: p.requestForm?.productName || "",
-                        targetCustomer: p.requestForm?.targetCustomer || "",
-                        coreCharacter: p.requestForm?.coreCharacter || "",
-                      },
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="productName">제품/서비스명</Label>
-                <Input
-                  id="productName"
-                  name="productName"
-                  type="text"
-                  placeholder="제품/서비스명을 입력하세요"
-                  className="p-6"
-                  onChange={(e) =>
-                    setPayload((p) => ({
-                      ...p,
-                      requestForm: {
-                        ...p.requestForm,
-                        files: p.requestForm?.files || null,
-                        productName: e.target.value,
-                        targetCustomer: p.requestForm?.targetCustomer || "",
-                        coreCharacter: p.requestForm?.coreCharacter || "",
-                      },
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="targetCustomer">타겟 고객층</Label>
-                <Input
-                  id="targetCustomer"
-                  name="targetCustomer"
-                  type="text"
-                  placeholder="예: 20-30대 직장인, 학생 등"
-                  className="p-6"
-                  onChange={(e) =>
-                    setPayload((p) => ({
-                      ...p,
-                      requestForm: {
-                        ...p.requestForm,
-                        files: p.requestForm?.files || null,
-                        productName: p.requestForm?.productName || "",
-                        targetCustomer: e.target.value,
-                        coreCharacter: p.requestForm?.coreCharacter || "",
-                      },
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="coreCharacter">핵심 특징</Label>
-                <textarea
-                  name="coreCharacter"
-                  id="coreCharacter"
-                  onChange={(e) =>
-                    setPayload((p) => ({
-                      ...p,
-                      requestForm: {
-                        ...p.requestForm,
-                        files: p.requestForm?.files || null,
-                        productName: p.requestForm?.productName || "",
-                        targetCustomer: p.requestForm?.targetCustomer || "",
-                        coreCharacter: e.target.value,
-                      },
-                    }))
-                  }
-                  placeholder={`제품/서비스의 핵심 특징을 입력하세요. ex)\n- 직접 로스팅한 원두 사용\n- 조용해서 혼자 작업하기 좋음\n- 디저트는 매일 직접 만듦`}
-                  rows={6}
-                  className="w-full border-2 rounded-lg p-4"
-                />
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                onClick={back}
-                variant={"secondary"}
-                className="p-6"
-              >
-                <ArrowLeft /> 이전
-              </Button>
-              <Button
-                type="button"
-                onClick={handleGenerate}
-                disabled={!isFormComplete || submitting}
-                className="p-6"
-              >
-                {submitting ? (
-                  <>
-                    <LoaderCircle className="animate-spin" />
-                    생성 중...
-                  </>
-                ) : (
-                  <>
-                    포스팅 생성하기 <ArrowRight />
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {fetcher.data?.ok === false && (
-              <p className="text-red-500 text-center">
-                {fetcher.data.error || "전송에 실패했습니다."}
-              </p>
+            {/* Step 1 */}
+            {step === 1 && (
+              <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
+                <div className="space-y-3">
+                  <h2 className="font-extrabold text-3xl">플랫폼 선택</h2>
+                  <p className="text-lg text-gray-500">
+                    포스팅할 플랫폼을 선택하세요
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <ChoiceButton
+                    active={payload.platform === "instagram"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, platform: "instagram" }))
+                    }
+                    img=""
+                    title="인스타그램"
+                    description="이미지 중심의 짧은 컨텐츠"
+                  />
+                </div>
+                <Separator />
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    onClick={next}
+                    disabled={payload.platform === null}
+                    className="p-8 text-lg"
+                  >
+                    다음 단계 <ArrowRight />
+                  </Button>
+                </div>
+              </section>
             )}
-          </section>
-        )}
 
-        {/* Step 4 - 프리뷰 */}
-        {step === 4 && fetcher.data?.preview && (
-          <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
-            <div className="space-y-3">
-              <h2 className="font-extrabold text-3xl">생성 결과 확인</h2>
-              <p className="text-lg text-gray-500">
-                AI가 생성한 포스팅을 확인하고 저장하거나 재생성하세요
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-8">
-              {/* 이미지 프리뷰 */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-xl">이미지</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {fetcher.data.imageUrls?.map((url, idx) => (
-                    <img
-                      key={idx}
-                      src={url}
-                      alt={`uploaded-${idx}`}
-                      className="w-full h-40 object-cover rounded-lg border"
-                    />
-                  ))}
-                  {(!fetcher.data.imageUrls ||
-                    fetcher.data.imageUrls.length === 0) && (
-                    <p className="text-gray-400">업로드된 이미지가 없습니다</p>
-                  )}
+            {/* Step 2 */}
+            {step === 2 && (
+              <section className="space-y-10">
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 600 }}>템플릿 선택</h2>
+                  <p>포스팅 스타일에 맞는 템플릿을 선택하세요</p>
                 </div>
-              </div>
+                <div className="grid grid-cols-3 gap-5">
+                  <ChoiceButton
+                    active={payload.template === "basic"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, template: "basic" }))
+                    }
+                    img=""
+                    title="기본 포맷"
+                    description="간단하고 깔끔한 기본 포스팅 형식"
+                  />
+                  <ChoiceButton
+                    active={payload.template === "list"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, template: "list" }))
+                    }
+                    img=""
+                    title="스토리텔링"
+                    description="이야기 형식으로 풀어가는 감성적인 포스팅"
+                  />
+                  <ChoiceButton
+                    active={payload.template === "image"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, template: "image" }))
+                    }
+                    img=""
+                    title="리스트형"
+                    description="정보를 리스트로 정리한 실용적인 포맷"
+                  />
+                  <ChoiceButton
+                    active={payload.template === "question"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, template: "question" }))
+                    }
+                    img=""
+                    title="팁 & 노하우"
+                    description="실용적인 팁과 노하우를 전달하는 포맷"
+                  />
+                  <ChoiceButton
+                    active={payload.template === "tip-knowhow"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, template: "tip-knowhow" }))
+                    }
+                    img=""
+                    title="기본 포맷"
+                    description=""
+                  />
+                </div>
+                <Separator />
+                <div className="flex justify-between">
+                  <Button
+                    type="button"
+                    onClick={back}
+                    disabled={false}
+                    variant={"secondary"}
+                    className="p-6"
+                  >
+                    이전
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={next}
+                    disabled={payload.template === null}
+                    variant={"secondary"}
+                    className="p-6"
+                  >
+                    다음 <ArrowRight />
+                  </Button>
+                </div>
+              </section>
+            )}
 
-              {/* 텍스트 프리뷰 */}
-              <div className="space-y-4">
-                <h3 className="font-bold text-xl">포스팅 내용</h3>
-                <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500">제목</p>
-                    <p className="font-semibold text-lg">
-                      {fetcher.data.preview.title}
-                    </p>
+            {/* Step 3 */}
+            {step === 3 && (
+              <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
+                <div className="space-y-3">
+                  <h2 className="font-extrabold text-3xl">컨텐츠 작성</h2>
+                  <p className="text-lg text-gray-500">
+                    포스팅에 필요한 세부 정보를 입력하세요
+                  </p>
+                </div>
+
+                <Form method="post" encType="multipart/form-data">
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="files">이미지 업로드</Label>
+                      {previewUrls && (
+                        <div className="flex gap-3">
+                          {previewUrls.map((i) => (
+                            <img src={i} />
+                          ))}
+                        </div>
+                      )}
+
+                      <Input
+                        id="files"
+                        name="files"
+                        placeholder="파일 선택"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={onFileChanges}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="productName">제품/서비스명</Label>
+                      <Input
+                        id="productName"
+                        name="productName"
+                        type="text"
+                        placeholder="제품/서비스명을 입력하세요"
+                        className="p-6"
+                        onChange={(e) =>
+                          setPayload((p) => ({
+                            ...p,
+                            requestForm: {
+                              ...p.requestForm,
+                              files: p.requestForm?.files || null,
+                              productName: e.target.value,
+                              targetCustomer:
+                                p.requestForm?.targetCustomer || "",
+                              coreCharacter: p.requestForm?.coreCharacter || "",
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="targetCustomer">타겟 고객층</Label>
+                      <Input
+                        id="targetCustomer"
+                        name="targetCustomer"
+                        type="text"
+                        placeholder="예: 20-30대 직장인, 학생 등"
+                        className="p-6"
+                        onChange={(e) =>
+                          setPayload((p) => ({
+                            ...p,
+                            requestForm: {
+                              ...p.requestForm,
+                              files: p.requestForm?.files || null,
+                              productName: p.requestForm?.productName || "",
+                              targetCustomer: e.target.value,
+                              coreCharacter: p.requestForm?.coreCharacter || "",
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="coreCharacter">핵심 특징</Label>
+                      <textarea
+                        name="coreCharacter"
+                        id="coreCharacter"
+                        onChange={(e) =>
+                          setPayload((p) => ({
+                            ...p,
+                            requestForm: {
+                              ...p.requestForm,
+                              files: p.requestForm?.files || null,
+                              productName: p.requestForm?.productName || "",
+                              targetCustomer:
+                                p.requestForm?.targetCustomer || "",
+                              coreCharacter: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder={`제품/서비스의 핵심 특징을 입력하세요. ex)\n- 직접 로스팅한 원두 사용\n- 조용해서 혼자 작업하기 좋음\n- 디저트는 매일 직접 만듦`}
+                        rows={6}
+                        className="w-full border-2 rounded-lg p-4"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">본문</p>
-                    <p className="whitespace-pre-wrap">
-                      {fetcher.data.preview.text}
-                    </p>
+                </Form>
+
+                <Separator />
+
+                <div className="flex justify-between">
+                  <Button
+                    type="button"
+                    onClick={back}
+                    variant={"secondary"}
+                    className="p-6"
+                  >
+                    <ArrowLeft /> 이전
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleGenerate}
+                    disabled={!isFormComplete || submitting}
+                    className="p-6"
+                  >
+                    {submitting ? (
+                      <>
+                        <LoaderCircle className="animate-spin" />
+                        생성 중...
+                      </>
+                    ) : (
+                      <>
+                        포스팅 생성하기 <ArrowRight />
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {fetcher.data?.ok === false && (
+                  <p className="text-red-500 text-center">
+                    {fetcher.data.error || "전송에 실패했습니다."}
+                  </p>
+                )}
+              </section>
+            )}
+
+            {/* Step 4 - 프리뷰 */}
+            {step === 4 && fetcher.data?.preview && (
+              <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
+                <div className="space-y-3">
+                  <h2 className="font-extrabold text-3xl">생성 결과 확인</h2>
+                  <p className="text-lg text-gray-500">
+                    AI가 생성한 포스팅을 확인하고 저장하거나 재생성하세요
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  {/* 이미지 프리뷰 */}
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-xl">이미지</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      {previewUrls?.map((url, idx) => (
+                        <img
+                          key={idx}
+                          src={url}
+                          alt={`uploaded-${idx}`}
+                          className="w-full h-40 object-cover rounded-lg border"
+                        />
+                      ))}
+                      {(!previewUrls || previewUrls.length === 0) && (
+                        <p className="text-gray-400">
+                          업로드된 이미지가 없습니다
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">해시태그</p>
-                    <p className="text-blue-600">
-                      {fetcher.data.preview.hashtags.join(" ")}
-                    </p>
+
+                  {/* 텍스트 프리뷰 */}
+                  <div className="space-y-4">
+                    <h3 className="font-bold text-xl">포스팅 내용</h3>
+                    <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                      <div>
+                        <p className="text-sm text-gray-500">제목</p>
+                        <p className="font-semibold text-lg">
+                          {fetcher.data.preview.title}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">본문</p>
+                        <p className="whitespace-pre-wrap">
+                          {fetcher.data.preview.text}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">해시태그</p>
+                        <p className="text-blue-600">
+                          {fetcher.data.preview.hashtags.join(" ")}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <Separator />
+                <Separator />
 
-            <div className="flex justify-between">
-              <Button
-                type="button"
-                onClick={back}
-                variant={"secondary"}
-                className="p-6"
-              >
-                <ArrowLeft /> 다시 입력
-              </Button>
-              <div className="space-x-3">
-                <Button
-                  type="button"
-                  onClick={handleRegenerate}
-                  disabled={submitting}
-                  variant={"outline"}
-                  className="p-6"
-                >
-                  {submitting ? (
-                    <LoaderCircle className="animate-spin" />
-                  ) : (
-                    <RefreshCw />
-                  )}
-                  재생성
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleConfirm}
-                  disabled={submitting}
-                  className="p-6"
-                >
-                  {submitting ? (
-                    <LoaderCircle className="animate-spin" />
-                  ) : (
-                    <Check />
-                  )}
-                  확정하고 저장
-                </Button>
-              </div>
-            </div>
-          </section>
-        )}
-      </main>
+                <div className="flex justify-between">
+                  <Button
+                    type="button"
+                    onClick={back}
+                    variant={"secondary"}
+                    className="p-6"
+                  >
+                    <ArrowLeft /> 다시 입력
+                  </Button>
+                  <div className="space-x-3">
+                    <Button
+                      type="button"
+                      onClick={handleRegenerate}
+                      disabled={submitting}
+                      variant={"outline"}
+                      className="p-6"
+                    >
+                      {submitting ? (
+                        <LoaderCircle className="animate-spin" />
+                      ) : (
+                        <RefreshCw />
+                      )}
+                      재생성
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleConfirm}
+                      disabled={submitting}
+                      className="p-6"
+                    >
+                      {submitting ? (
+                        <LoaderCircle className="animate-spin" />
+                      ) : (
+                        <Check />
+                      )}
+                      확정하고 저장
+                    </Button>
+                  </div>
+                </div>
+              </section>
+            )}
+          </main>
+        </>
+      ) : (
+        <>
+          <h1>마케터가 없습니다. 먼저 마케터를 생성해주세요.</h1>
+          <div>
+            <Button asChild>
+              <Link to={"/dashboard"}>돌아가기</Link>
+            </Button>
+            <Button asChild>
+              <Link to={"/marketer/create"}>마케터 생성하기</Link>
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

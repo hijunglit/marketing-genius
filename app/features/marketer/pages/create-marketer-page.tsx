@@ -15,7 +15,7 @@ import { Textarea } from "~/common/components/ui/textarea";
 import z from "zod";
 import { makeSSRClient } from "~/supa-client";
 import { getLoggedInUser } from "~/features/users/queries";
-import { CreateMarketer } from "../mutations";
+import { createMarketer } from "../mutations";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Create Marketer" }];
@@ -39,7 +39,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     return { formErrors: error.flatten().fieldErrors };
   }
 
-  const marketerId = await CreateMarketer(client, {
+  const marketerId = await createMarketer(client, {
     companyName: data.companyName,
     category: data.category,
     coreService: data.coreService,

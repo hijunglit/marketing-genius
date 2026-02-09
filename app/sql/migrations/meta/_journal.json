@@ -36,6 +36,13 @@
       "when": 1769960068946,
       "tag": "0004_deep_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770027976215,
+      "tag": "0005_rich_silverclaw",
+      "breakpoints": true
     }
   ]
 }

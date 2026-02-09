@@ -55,22 +55,22 @@ const quick_run_items = [
   {
     icon: PlusIcon,
     title: "포스팅 생성",
-    url: "/posting/create"
+    url: "/posting/create",
   },
   {
     icon: Archive,
     title: "포스팅 관리",
-    url: "/contents"
+    url: "/contents",
   },
   {
     icon: Bot,
     title: "마케터 생성",
-    url: "/marketer/create"
+    url: "/marketer/create",
   },
   {
     icon: NotebookText,
     title: "마케터 관리",
-    url: "/marketer"
+    url: "/marketer",
   },
 ];
 
@@ -87,6 +87,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 };
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
+  console.log(loaderData);
   return (
     <div className="p-20 space-y-10">
       <header className="flex justify-between items-center">
@@ -98,7 +99,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           <Button asChild>
             <Link to={"/posting/create"}>
               <PlusIcon /> 새 포스팅
-              </Link>
+            </Link>
           </Button>
         </div>
       </header>
@@ -148,7 +149,9 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                     <div className="flex">
                       <div className="flex items-center gap-4">
                         <div className="size-12 rounded-xl shadow-lg overflow-hidden">
-                          <img src={contents.images[0].image_url} />
+                          {contents.images.length > 0 ? (
+                            <img src={contents.images[0].image_url} />
+                          ) : null}
                         </div>
                         <div>
                           <p className="text-sm font-bold">
@@ -161,7 +164,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                             <ClockIcon size={10} />
                             <span>
                               {DateTime.fromISO(
-                                contents.created_at,
+                                contents.created_at
                               ).toRelative()}
                             </span>
                           </div>

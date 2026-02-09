@@ -14,35 +14,23 @@ const PostingResponseSchema = z.object({
 export type PostingResponse = z.infer<typeof PostingResponseSchema>;
 
 // 이미지 업로드
-export const uploadImages = async (
-  client: SupabaseClient<Database>,
-  files: File[],
-  userId: string
-) => {
-  const uploadedUrls: string[] = [];
+// export const uploadImage = async (
+//     client: SupabaseClient<Database>,
+//     {
+//         id,
+//         imageUrl,
+//     contents_id,
+//     }: {
+//             id: string;
+//             imageUrl: string;
+//             contents_id: string;
+//     }
+// ) => {
+//     const { error } = await client.from("images").insert({
+//         image_url: imageUrl,
 
-  for (const file of files) {
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-    const { data, error } = await client.storage
-      .from("posting-images")
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
-
-    if (error) throw error;
-
-    const {
-      data: { publicUrl },
-    } = client.storage.from("posting-images").getPublicUrl(data.path);
-
-    uploadedUrls.push(publicUrl);
-  }
-
-  return uploadedUrls;
-};
+//     })
+// };
 
 // request_contents INSERT
 export const createRequestContents = async (
@@ -141,43 +129,37 @@ export const confirmPosting = async (
   }
 ) => {
   // 1. contents INSERT
-  const { data: contentsData, error: contentsError } = await client
-    .from("contents")
-    .insert({
-      text,
-      hashtag: hashtags.join(" "),
-    })
-    .select("contents_id")
-    .single();
+  const { data, error: contentsError } = await client.rpc(
+    "confirm_request_contents",
+    {
+      p_request_id: requestId,
+      p_text: text,
+      p_hashtag: hashtags.join(" "),
+    }
+  );
 
   if (contentsError) throw contentsError;
 
-  const contentsId = contentsData.contents_id;
+  const contentsId = typeof data === "string" ? Number(data) : (data as number);
 
-  // 2. images INSERT
-  if (imageUrls.length > 0) {
-    const imageInserts = imageUrls.map((url) => ({
-      image_url: url,
-      contents_id: contentsId,
-    }));
-
-    const { error: imagesError } = await client
-      .from("images")
-      .insert(imageInserts);
-
-    if (imagesError) throw imagesError;
+  if (!Number.isFinite(contentsId)) {
+    throw new Error("Invalid contentsId returned from RPC");
   }
+  // 2. images INSERT
+  const uploadImage = async () => {
+    if (imageUrls.length > 0) {
+      const imageInserts = imageUrls.map((url) => ({
+        image_url: url,
+        contents_id: contentsId,
+      }));
 
-  // 3. request_contents 업데이트 (is_confirm + contents_id 연결)
-  const { error: updateError } = await client
-    .from("request_contents")
-    .update({
-      is_confirm: true,
-      contents_id: contentsId,
-    })
-    .eq("request_id", requestId);
+      const { error: imagesError } = await client
+        .from("images")
+        .insert(imageInserts);
 
-  if (updateError) throw updateError;
+      if (imagesError) throw imagesError;
+    }
+  };
 
   return contentsId;
 };

@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
   useLocation,
   useNavigation,
 } from "react-router";
@@ -53,11 +54,17 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
   const {
     data: { user },
   } = await client.auth.getUser();
+
+  const ENV = {
+    SUPABASE_URL: process.env.SUPABASE_URL!,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY!,
+  };
+
   if (user) {
     const profile = await getUserById(client, { id: user?.id });
-    return { user, profile };
+    return { user, profile, ENV };
   }
-  return { user: null, profile: null };
+  return { user: null, profile: null, ENV };
 };
 
 export default function App({
@@ -67,6 +74,7 @@ export default function App({
   children: React.ReactNode;
   loaderData: Route.ComponentProps["loaderData"];
 }) {
+  const { ENV } = useLoaderData<typeof loader>();
   const { pathname } = useLocation();
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
@@ -91,6 +99,11 @@ export default function App({
       <div className="w-full">
         <Outlet />
       </div>
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `window.ENV = ${JSON.stringify(ENV)};`,
+        }}
+      />
     </div>
   );
 }

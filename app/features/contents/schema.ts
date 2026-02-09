@@ -32,7 +32,8 @@ export const requestContents = pgTable("request_contents", {
     .primaryKey()
     .generatedAlwaysAsIdentity(),
   contents_id: bigint({ mode: "number" }).references(
-    () => contents.contents_id
+    () => contents.contents_id,
+    { onDelete: "set null" }
   ),
   profile_id: uuid()
     .references(() => profiles.profile_id)

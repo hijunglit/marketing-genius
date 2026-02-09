@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/supa-client";
 
-export const CreateMarketer = async (
+export const createMarketer = async (
   client: SupabaseClient<Database>,
   {
     companyName,
@@ -24,7 +24,7 @@ export const CreateMarketer = async (
       category,
       core_service: coreService,
       company_description: aboutCompany,
-      profiles_id: userId,
+      profile_id: userId,
     })
     .select("ai_id")
     .single();
