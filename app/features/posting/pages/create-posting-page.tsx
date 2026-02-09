@@ -143,7 +143,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     if (intent === "confirm") {
       const parsed = confirmSchema.safeParse(Object.fromEntries(formData));
       if (!parsed.success) {
-        return { ok: false, error: "확인 데이터가 올바르지 않습니다" };
+        return { ok: false, error: parsed.error.flatten() };
       }
 
       if (parsed.data.stage === "plan") {
@@ -158,7 +158,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
         const targets = await Promise.all(
           fileMeta.map(async (m, order) => {
             const ext = (m.name.split(".").pop() || "jpg").toLowerCase();
-            const path = `posting/${parsed.data.requestId}/${crypto.randomUUID}.${ext}`;
+            const path = `posting/${userId}/${parsed.data.requestId}/${crypto.randomUUID()}.${ext}`;
 
             const { data, error } = await client.storage
               .from(bucket)
@@ -174,7 +174,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
       // finalize
       const { requestId, text, hashtags, imageUrls } = parsed.data;
 
-      if (!Array.isArray(imageUrls) || imageUrls.length === 0) {
+      const parsedImageUrls = JSON.parse(imageUrls);
+
+      if (!Array.isArray(parsedImageUrls) || parsedImageUrls.length === 0) {
         return { ok: false, error: "이미지는 필수입니다." };
       }
 
@@ -182,7 +184,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
         requestId,
         text,
         hashtags: JSON.parse(hashtags),
-        imageUrls: JSON.parse(imageUrls),
+        imageUrls: parsedImageUrls,
       });
 
       return redirect("/contents");
@@ -267,20 +269,42 @@ type Payload = {
   } | null;
 };
 
-type ActionData = {
-  ok: boolean;
-  error?: string;
-  intent?: string;
-  preview?: PostingResponse;
-  requestId?: number;
-  imageUrls?: string[];
-  formData?: {
+type GenerateResponse = {
+  ok: true;
+  intent: "generate";
+  preview: PostingResponse;
+  requestId: number;
+  imageUrls: string[];
+  formData: {
     platform: string;
     template: string;
     productName: string;
     targetCustomer: string;
     coreCharacter: string;
   };
+};
+
+type ConfirmPlanResponse = {
+  ok: true;
+  intent: "confirm";
+  stage: "plan";
+  bucket: string;
+  targets: Array<{ order: number; path: string; token: string }>;
+};
+
+type ErrorResponse = {
+  ok: false;
+  error: any;
+};
+
+type ActionData = GenerateResponse | ConfirmPlanResponse | ErrorResponse;
+
+export type GenerateFormData = {
+  platform: "instagram" | string;
+  template: "image" | string;
+  productName: string;
+  targetCustomer: string;
+  coreCharacter: string;
 };
 
 function ChoiceButton({
@@ -309,7 +333,7 @@ function ChoiceButton({
         cursor: "pointer",
       }}
     >
-      <img src={""} alt={img} />
+      <img src={img} />
       <div>
         <h3>{title}</h3>
         <p>{description}</p>
@@ -333,15 +357,30 @@ export default function CreatePostingPage({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadUrls, setUploadUrls] = useState<string[]>([]);
+
+  const [preview, setPreview] = useState<PostingResponse | null>(null);
+  const [requestId, setRequestId] = useState<number | null>(null);
+  const [lastGenerateForm, setLastGenerateForm] =
+    useState<GenerateFormData | null>(null);
+
   const { env } = useLoaderData<typeof loader>();
   const supabase = useMemo(() => {
     return createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
   }, [env.SUPABASE_URL, env.SUPABASE_ANON_KEY]);
 
   useEffect(() => {
-    const data = fetcher.data as any;
+    const data = fetcher.data as ActionData | undefined;
+    if (!data || !data.ok) return;
+    if (data.intent === "generate") {
+      setLastGenerateForm(data.formData);
+      setPreview(data.preview);
+      setRequestId(data.requestId);
+    }
+    if (data.intent !== "confirm" || data.stage !== "plan") return;
+    if (!preview || requestId == null) return;
+
+    if (typeof requestId !== "number" || Number.isNaN(requestId)) return;
     console.log("confirm actions response: ", data);
-    if (!data || data.intent !== "confirm" || data.stage !== "plan") return;
 
     (async () => {
       const { bucket, targets } = data as {
@@ -367,21 +406,22 @@ export default function CreatePostingPage({
       // public urls
       setUploadUrls(urls);
 
-      if (!fetcher.data?.preview || !fetcher.data?.requestId) return;
+      console.log("fetcher data: ", fetcher);
 
       const formData = new FormData();
       formData.append("intent", "confirm");
       formData.append("stage", "finalize");
-      formData.append("requestId", String(data.request_id));
-      formData.append("title", data.title);
-      formData.append("text", data.text);
-      formData.append("hashtag", JSON.stringify(data.hashtags));
-      formData.append("imageUrls", JSON.stringify(uploadUrls));
+      formData.append("requestId", String(requestId));
+      formData.append("title", preview.title);
+      formData.append("text", preview.text);
+      formData.append("hashtags", JSON.stringify(preview.hashtags));
+      formData.append("imageUrls", JSON.stringify(urls));
 
       fetcher.submit(formData, { method: "post" });
+      console.log("This is upload urls", uploadUrls);
     })().catch((e) => {});
     return () => previewUrls.forEach((u) => URL.revokeObjectURL(u));
-  }, [fetcher.data, selectedFiles, supabase]);
+  }, [fetcher.data, selectedFiles, supabase, preview, requestId]);
 
   const onFileChanges = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -394,13 +434,11 @@ export default function CreatePostingPage({
     setPayload((p) => ({
       ...p,
       requestForm: {
-        ...p.requestForm,
-        files: [],
+        files, // ✅ 여기로 넣기
         productName: p.requestForm?.productName || "",
         targetCustomer: p.requestForm?.targetCustomer || "",
         coreCharacter: p.requestForm?.coreCharacter || "",
       },
-      files,
     }));
   };
 
@@ -439,7 +477,7 @@ export default function CreatePostingPage({
 
   // 확정하기 submit
   const handleConfirm = () => {
-    if (!fetcher.data?.preview || !fetcher.data?.requestId) return;
+    if (!preview || requestId == null) return;
     if (selectedFiles.length === 0) return;
 
     const fileMeta = selectedFiles.map((f) => ({
@@ -451,10 +489,10 @@ export default function CreatePostingPage({
     const formData = new FormData();
     formData.append("intent", "confirm");
     formData.append("stage", "plan");
-    formData.append("requestId", String(fetcher.data.requestId));
-    formData.append("title", fetcher.data.preview.title);
-    formData.append("text", fetcher.data.preview.text);
-    formData.append("hashtags", JSON.stringify(fetcher.data.preview.hashtags));
+    formData.append("requestId", String(requestId));
+    formData.append("title", preview.title);
+    formData.append("text", preview.text);
+    formData.append("hashtags", JSON.stringify(preview.hashtags));
     formData.append("fileMeta", JSON.stringify(fileMeta));
 
     fetcher.submit(formData, { method: "post" });
@@ -462,23 +500,22 @@ export default function CreatePostingPage({
 
   // 재생성하기 submit
   const handleRegenerate = () => {
-    if (!fetcher.data?.formData || !fetcher.data?.requestId) return;
+    if (!lastGenerateForm || requestId === null) return;
 
     const formData = new FormData();
     formData.append("intent", "regenerate");
-    formData.append("platform", fetcher.data.formData.platform);
-    formData.append("template", fetcher.data.formData.template);
-    formData.append("productName", fetcher.data.formData.productName);
-    formData.append("targetCustomer", fetcher.data.formData.targetCustomer);
-    formData.append("coreCharacter", fetcher.data.formData.coreCharacter);
-    formData.append("requestId", String(fetcher.data.requestId));
-    formData.append("imageUrls", JSON.stringify(fetcher.data.imageUrls || []));
+    formData.append("platform", lastGenerateForm.platform);
+    formData.append("template", lastGenerateForm.template);
+    formData.append("productName", lastGenerateForm.productName);
+    formData.append("targetCustomer", lastGenerateForm.targetCustomer);
+    formData.append("coreCharacter", lastGenerateForm.coreCharacter);
+    formData.append("requestId", String(requestId));
 
     fetcher.submit(formData, { method: "post" });
   };
 
   // 생성 성공 시 Step 4로 이동
-  const hasPreview = fetcher.data?.ok && fetcher.data?.preview;
+  const hasPreview = fetcher.data?.ok && preview;
   if (hasPreview && step === 3) {
     setStep(4);
   }
@@ -670,8 +707,14 @@ export default function CreatePostingPage({
                       <Label htmlFor="files">이미지 업로드</Label>
                       {previewUrls && (
                         <div className="flex gap-3">
-                          {previewUrls.map((i) => (
-                            <img src={i} />
+                          {previewUrls.map((item, index) => (
+                            <div className="size-70 overflow-hidden rounded-3xl">
+                              <img
+                                src={item}
+                                key={"preview" + index}
+                                className="object-cover w-full h-full"
+                              />
+                            </div>
                           ))}
                         </div>
                       )}
@@ -796,7 +839,7 @@ export default function CreatePostingPage({
             )}
 
             {/* Step 4 - 프리뷰 */}
-            {step === 4 && fetcher.data?.preview && (
+            {step === 4 && preview && (
               <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
                 <div className="space-y-3">
                   <h2 className="font-extrabold text-3xl">생성 결과 확인</h2>
@@ -812,7 +855,7 @@ export default function CreatePostingPage({
                     <div className="grid grid-cols-2 gap-2">
                       {previewUrls?.map((url, idx) => (
                         <img
-                          key={idx}
+                          key={"uploaded-imgs" + idx}
                           src={url}
                           alt={`uploaded-${idx}`}
                           className="w-full h-40 object-cover rounded-lg border"
@@ -832,20 +875,16 @@ export default function CreatePostingPage({
                     <div className="bg-gray-50 p-6 rounded-lg space-y-4">
                       <div>
                         <p className="text-sm text-gray-500">제목</p>
-                        <p className="font-semibold text-lg">
-                          {fetcher.data.preview.title}
-                        </p>
+                        <p className="font-semibold text-lg">{preview.title}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">본문</p>
-                        <p className="whitespace-pre-wrap">
-                          {fetcher.data.preview.text}
-                        </p>
+                        <p className="whitespace-pre-wrap">{preview.text}</p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">해시태그</p>
                         <p className="text-blue-600">
-                          {fetcher.data.preview.hashtags.join(" ")}
+                          {preview.hashtags.join(" ")}
                         </p>
                       </div>
                     </div>

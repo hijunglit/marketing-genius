@@ -135,6 +135,7 @@ export const confirmPosting = async (
       p_request_id: requestId,
       p_text: text,
       p_hashtag: hashtags.join(" "),
+      p_image_urls: imageUrls,
     }
   );
 
@@ -145,21 +146,6 @@ export const confirmPosting = async (
   if (!Number.isFinite(contentsId)) {
     throw new Error("Invalid contentsId returned from RPC");
   }
-  // 2. images INSERT
-  const uploadImage = async () => {
-    if (imageUrls.length > 0) {
-      const imageInserts = imageUrls.map((url) => ({
-        image_url: url,
-        contents_id: contentsId,
-      }));
-
-      const { error: imagesError } = await client
-        .from("images")
-        .insert(imageInserts);
-
-      if (imagesError) throw imagesError;
-    }
-  };
 
   return contentsId;
 };
