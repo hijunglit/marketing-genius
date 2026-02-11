@@ -70,6 +70,7 @@ const regenerateSchema = z.object({
   coreCharacter: z.string(),
   requestId: z.coerce.number(),
   imageUrls: z.string(), // JSON string
+  aiId: z.coerce.number(),
 });
 
 export const action = async ({ request }: Route.ActionArgs) => {
@@ -115,7 +116,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
       });
 
       // LLM 호출
-      const preview = await generatePosting({
+      const preview = await generatePosting(client, {
+        aiId,
         platform,
         template,
         productName,
@@ -166,7 +168,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
             if (error) throw error;
 
             return { order, path, token: data.token };
-          })
+          }),
         );
         return { ok: true, intent: "confirm", stage: "plan", bucket, targets };
       }
@@ -204,9 +206,11 @@ export const action = async ({ request }: Route.ActionArgs) => {
         coreCharacter,
         requestId,
         imageUrls,
+        aiId,
       } = parsed.data;
 
-      const preview = await generatePosting({
+      const preview = await generatePosting(client, {
+        aiId,
         platform,
         template,
         productName,
@@ -348,6 +352,9 @@ export default function CreatePostingPage({
   const isMarketerExist = loaderData.marketer.length > 0;
   let aiId: number;
   const fetcher = useFetcher<ActionData>();
+  const generateFetcher = useFetcher<ActionData>();
+  const confirmFetcher = useFetcher<ActionData>();
+  const regenerateFetcher = useFetcher<ActionData>();
   const [step, setStep] = useState(1);
   const [payload, setPayload] = useState<Payload>({
     platform: null,
@@ -400,13 +407,12 @@ export default function CreatePostingPage({
         if (error) throw error;
       }
       const urls = targets.map(
-        (t) => supabase.storage.from(bucket).getPublicUrl(t.path).data.publicUrl
+        (t) =>
+          supabase.storage.from(bucket).getPublicUrl(t.path).data.publicUrl,
       );
 
       // public urls
       setUploadUrls(urls);
-
-      console.log("fetcher data: ", fetcher);
 
       const formData = new FormData();
       formData.append("intent", "confirm");
@@ -442,7 +448,6 @@ export default function CreatePostingPage({
     }));
   };
 
-  // TODO: 실제로는 마케터 선택 UI가 필요하지만, 임시로 하드코딩
   if (isMarketerExist) {
     aiId = loaderData.marketer[0].ai_id;
   }
@@ -636,8 +641,8 @@ export default function CreatePostingPage({
                       setPayload((p) => ({ ...p, template: "list" }))
                     }
                     img=""
-                    title="스토리텔링"
-                    description="이야기 형식으로 풀어가는 감성적인 포스팅"
+                    title="리스트형"
+                    description="정보를 리스트로 정리한 실용적인 포맷"
                   />
                   <ChoiceButton
                     active={payload.template === "image"}
@@ -645,8 +650,8 @@ export default function CreatePostingPage({
                       setPayload((p) => ({ ...p, template: "image" }))
                     }
                     img=""
-                    title="리스트형"
-                    description="정보를 리스트로 정리한 실용적인 포맷"
+                    title="이미지 중심"
+                    description="이미지를 강조한 시각적인 포스팅"
                   />
                   <ChoiceButton
                     active={payload.template === "question"}
@@ -654,8 +659,8 @@ export default function CreatePostingPage({
                       setPayload((p) => ({ ...p, template: "question" }))
                     }
                     img=""
-                    title="팁 & 노하우"
-                    description="실용적인 팁과 노하우를 전달하는 포맷"
+                    title="질문형"
+                    description="질문으로 시작해서 참여를 유도하는 포맷"
                   />
                   <ChoiceButton
                     active={payload.template === "tip-knowhow"}
@@ -663,8 +668,8 @@ export default function CreatePostingPage({
                       setPayload((p) => ({ ...p, template: "tip-knowhow" }))
                     }
                     img=""
-                    title="기본 포맷"
-                    description=""
+                    title="팁 & 노하우"
+                    description="실용적인 팁과 노하우를 전달하는 포맷"
                   />
                 </div>
                 <Separator />

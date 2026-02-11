@@ -53,7 +53,7 @@ export const createRequestContents = async (
     productName: string;
     target: string;
     coreMessage: string;
-  }
+  },
 ) => {
   const { data, error } = await client
     .from("request_contents")
@@ -76,25 +76,52 @@ export const createRequestContents = async (
 };
 
 // LLM 호출 (structured output)
-export const generatePosting = async ({
-  platform,
-  template,
-  productName,
-  targetCustomer,
-  coreCharacter,
-}: {
-  platform: string;
-  template: string;
-  productName: string;
-  targetCustomer: string;
-  coreCharacter: string;
-}): Promise<PostingResponse> => {
+export const generatePosting = async (
+  client: SupabaseClient<Database>,
+  {
+    aiId,
+    platform,
+    template,
+    productName,
+    targetCustomer,
+    coreCharacter,
+  }: {
+    aiId: number;
+    platform: string;
+    template: string;
+    productName: string;
+    targetCustomer: string;
+    coreCharacter: string;
+  },
+): Promise<PostingResponse> => {
+  const { data: company, error } = await client
+    .from("ai")
+    .select(
+      `
+        company_description,
+        company_name,
+        category,
+        core_service
+      `,
+    )
+    .eq("ai_id", aiId)
+    .single();
+
+  if (!company) {
+    throw new Error("마케터를 찾을 수 없습니다.");
+  }
   const prompt = `당신은 소셜 미디어 마케팅 전문가입니다. 다음 정보를 바탕으로 ${platform} 포스팅을 작성해주세요.
 
 **제품/서비스명**: ${productName}
 **타겟 고객층**: ${targetCustomer}
 **핵심 특징**: ${coreCharacter}
 **템플릿 스타일**: ${template}
+
+클라이언트의 정보를 참고해주세요:
+**회사 이름**: ${company.company_name}
+**회사 설명**: ${company.company_description}
+**카테고리**: ${company.category}
+**핵심 서비스**: ${company.core_service}
 
 다음 형식으로 작성해주세요:
 - title: 눈길을 끄는 제목
@@ -126,7 +153,7 @@ export const confirmPosting = async (
     text: string;
     hashtags: string[];
     imageUrls: string[];
-  }
+  },
 ) => {
   // 1. contents INSERT
   const { data, error: contentsError } = await client.rpc(
@@ -136,7 +163,7 @@ export const confirmPosting = async (
       p_text: text,
       p_hashtag: hashtags.join(" "),
       p_image_urls: imageUrls,
-    }
+    },
   );
 
   if (contentsError) throw contentsError;
