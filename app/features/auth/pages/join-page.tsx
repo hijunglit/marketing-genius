@@ -72,16 +72,39 @@ export default function join({ actionData }: Route.ComponentProps) {
   const isSubmitting = navigation.state === "submitting";
 
   return (
-    <div className="h-screen flex flex-col justify-center">
-      <Card className="w-full max-w-2xl p-8">
+    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-[#0b0f19] text-white">
+      {/* background layers */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* subtle gradient */}
+        <div className="absolute inset-0 bg-linear-to-b from-[#0b0f19] via-[#0b0f19] to-black" />
+
+        {/* aurora blobs */}
+        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-purple-500/25 blur-3xl" />
+        <div className="absolute -bottom-52 -right-40 h-[620px] w-[620px] rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-fuchsia-400/15 blur-3xl" />
+
+        {/* noise 느낌의 도트/그리드 */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.35) 1px, transparent 0)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+      </div>
+
+      <Card className="relative w-full max-w-2xl p-8 mx-auto border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_120px_rgba(0,0,0,0.55)]">
         <CardHeader>
-          <CardTitle>회원가입</CardTitle>
+          <CardTitle className="text-white">회원가입</CardTitle>
           <CardDescription>새 계정을 만들어 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
           <Form method="post" className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="name">이름</label>
+              <label htmlFor="name" className="text-white">
+                이름
+              </label>
               <Input
                 type="text"
                 id="name"
@@ -96,7 +119,9 @@ export default function join({ actionData }: Route.ComponentProps) {
               )}
             </div>
             <div>
-              <label htmlFor="username">닉네임</label>
+              <label htmlFor="username" className="text-white">
+                닉네임
+              </label>
               <Input
                 type="text"
                 id="username"
@@ -111,7 +136,9 @@ export default function join({ actionData }: Route.ComponentProps) {
               )}
             </div>
             <div className="col-span-2">
-              <label htmlFor="email">이메일</label>
+              <label htmlFor="email" className="text-white">
+                이메일
+              </label>
               <Input
                 type="email"
                 id="email"
@@ -126,7 +153,9 @@ export default function join({ actionData }: Route.ComponentProps) {
               )}
             </div>
             <div className="col-span-2">
-              <label htmlFor="password">비밀번호</label>
+              <label htmlFor="password" className="text-white">
+                비밀번호
+              </label>
               <Input
                 type="password"
                 id="password"
@@ -142,7 +171,7 @@ export default function join({ actionData }: Route.ComponentProps) {
             </div>
             <Button
               type="submit"
-              className="w-full col-span-2"
+              className="w-full col-span-2 cursor-pointer"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -162,21 +191,23 @@ export default function join({ actionData }: Route.ComponentProps) {
         <CardFooter className="flex-col gap-2">
           <div>
             <span></span>
-            <span>또는</span>
+            <span className="text-white">또는</span>
             <span></span>
           </div>
           <Button variant="outline" className="w-full">
             Google로 회원가입
           </Button>
           <div className="flex items-center">
-            <span>이미 계정이 있으신가요?</span>
+            <span className="text-white">이미 계정이 있으신가요?</span>
             <Button variant="link">
               <Link to={"/auth/login"}>로그인</Link>
             </Button>
           </div>
           <div className="flex">
-            <ArrowLeftIcon />
-            <Link to={"/"}>홈으로 돌아가기</Link>
+            <ArrowLeftIcon color="white" />
+            <Link to={"/"} className="text-white">
+              홈으로 돌아가기
+            </Link>
           </div>
         </CardFooter>
       </Card>

@@ -78,7 +78,11 @@ export function AppSidebar({
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application Logo</SidebarGroupLabel>
+          <SidebarGroupLabel>
+            <Link to={"/"} className="font-bold">
+              Marrketing Genius
+            </Link>
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (

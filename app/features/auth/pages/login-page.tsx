@@ -71,17 +71,39 @@ export default function Login({ actionData }: Route.ComponentProps) {
   const isSubmitting =
     navigation.state === "submitting" || navigation.state === "loading";
   return (
-    <div className="h-screen flex">
-      <Card className="w-full max-w-sm">
+    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-[#0b0f19] text-white">
+      {/* background layers */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* subtle gradient */}
+        <div className="absolute inset-0 bg-linear-to-b from-[#0b0f19] via-[#0b0f19] to-black" />
+
+        {/* aurora blobs */}
+        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-purple-500/25 blur-3xl" />
+        <div className="absolute -bottom-52 -right-40 h-[620px] w-[620px] rounded-full bg-cyan-400/20 blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-fuchsia-400/15 blur-3xl" />
+
+        {/* noise 느낌의 도트/그리드 */}
+        <div
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.35) 1px, transparent 0)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+      </div>
+      <Card className="relative w-full max-w-2xl p-8 mx-auto border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_120px_rgba(0,0,0,0.55)]">
         <CardHeader className="text-center">
-          <CardTitle>로그인</CardTitle>
+          <CardTitle className="text-white">로그인</CardTitle>
           <CardDescription>계정에 로그인하여 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
           <Form method="post">
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">이메일 주소</Label>
+                <Label htmlFor="email" className="text-white">
+                  이메일 주소
+                </Label>
                 <Input
                   name="email"
                   id="email"
@@ -96,7 +118,9 @@ export default function Login({ actionData }: Route.ComponentProps) {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password">비밀번호</Label>
+                <Label htmlFor="password" className="text-white">
+                  비밀번호
+                </Label>
                 <Input
                   name="password"
                   id="password"
@@ -110,7 +134,11 @@ export default function Login({ actionData }: Route.ComponentProps) {
                   {actionData?.formErrors?.password?.join(", ")}
                 </p>
               )}
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
                   <LoaderCircle className="animate-spin" />
                 ) : (
@@ -129,14 +157,14 @@ export default function Login({ actionData }: Route.ComponentProps) {
         <CardFooter className="flex-col gap-2">
           <div>
             <span></span>
-            <span>또는</span>
+            <span className="text-white">또는</span>
             <span></span>
           </div>
           <Button variant="outline" className="w-full">
             Google로 계속하기
           </Button>
           <div className="flex items-center">
-            <span>계정이 없으신가요?</span>
+            <span className="text-white">계정이 없으신가요?</span>
             <CardAction>
               <Button variant="link">
                 <Link to={"/auth/join"}>회원가입</Link>
@@ -144,8 +172,10 @@ export default function Login({ actionData }: Route.ComponentProps) {
             </CardAction>
           </div>
           <div className="flex">
-            <ArrowLeftIcon />
-            <Link to={"/"}>홈으로 돌아가기</Link>
+            <ArrowLeftIcon color="white" />
+            <Link to={"/"} className="text-white">
+              홈으로 돌아가기
+            </Link>
           </div>
         </CardFooter>
       </Card>
