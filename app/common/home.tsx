@@ -18,9 +18,14 @@ export default function Home() {
             FAQ
           </a>
         </nav>
-        <Link to={"/auth/join"} style={styles.headerCta}>
-          무료로 시작하기
-        </Link>
+        <div className="space-x-2">
+          <Link to={"/auth/login"} style={styles.headerCta}>
+            로그인
+          </Link>
+          <Link to={"/auth/join"} style={styles.headerCta}>
+            무료로 시작하기
+          </Link>
+        </div>
       </header>
 
       {/* HERO */}

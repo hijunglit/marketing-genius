@@ -71,37 +71,31 @@ export default function Login({ actionData }: Route.ComponentProps) {
   const isSubmitting =
     navigation.state === "submitting" || navigation.state === "loading";
   return (
-    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-[#0b0f19] text-white">
+    <div className="relative min-h-screen flex flex-col justify-center overflow-hidden bg-white">
       {/* background layers */}
       <div className="pointer-events-none absolute inset-0">
-        {/* subtle gradient */}
-        <div className="absolute inset-0 bg-linear-to-b from-[#0b0f19] via-[#0b0f19] to-black" />
-
-        {/* aurora blobs */}
-        <div className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-purple-500/25 blur-3xl" />
-        <div className="absolute -bottom-52 -right-40 h-[620px] w-[620px] rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="absolute top-1/3 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full bg-fuchsia-400/15 blur-3xl" />
-
-        {/* noise 느낌의 도트/그리드 */}
+        <div className="absolute inset-0 bg-lenear  -to-b from-white via-white to-slate-50" />
+        <div className="absolute -top-48 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-indigo-200/60 blur-3xl" />
+        <div className="absolute -bottom-60 -left-40 h-[620px] w-[620px] rounded-full bg-sky-200/70 blur-3xl" />
         <div
-          className="absolute inset-0 opacity-[0.08]"
+          className="absolute inset-0 opacity-[0.25]"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.35) 1px, transparent 0)",
-            backgroundSize: "22px 22px",
+              "linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px)",
+            backgroundSize: "36px 36px",
           }}
         />
       </div>
-      <Card className="relative w-full max-w-2xl p-8 mx-auto border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_30px_120px_rgba(0,0,0,0.55)]">
+      <Card className="relative w-full max-w-2xl p-8 mx-auto border-slate-200/70 bg-white/80 backdrop-blur shadow-[0_30px_90px_rgba(15,23,42,0.12)]">
         <CardHeader className="text-center">
-          <CardTitle className="text-white">로그인</CardTitle>
+          <CardTitle className="text-black">로그인</CardTitle>
           <CardDescription>계정에 로그인하여 시작하세요</CardDescription>
         </CardHeader>
         <CardContent>
           <Form method="post">
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email" className="text-white">
+                <Label htmlFor="email" className="text-black">
                   이메일 주소
                 </Label>
                 <Input
@@ -118,7 +112,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="password" className="text-white">
+                <Label htmlFor="password" className="text-black">
                   비밀번호
                 </Label>
                 <Input
@@ -157,14 +151,14 @@ export default function Login({ actionData }: Route.ComponentProps) {
         <CardFooter className="flex-col gap-2">
           <div>
             <span></span>
-            <span className="text-white">또는</span>
+            <span className="text-black">또는</span>
             <span></span>
           </div>
           <Button variant="outline" className="w-full">
             Google로 계속하기
           </Button>
           <div className="flex items-center">
-            <span className="text-white">계정이 없으신가요?</span>
+            <span className="text-black">계정이 없으신가요?</span>
             <CardAction>
               <Button variant="link">
                 <Link to={"/auth/join"}>회원가입</Link>
@@ -173,7 +167,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
           </div>
           <div className="flex">
             <ArrowLeftIcon color="white" />
-            <Link to={"/"} className="text-white">
+            <Link to={"/"} className="text-black">
               홈으로 돌아가기
             </Link>
           </div>
