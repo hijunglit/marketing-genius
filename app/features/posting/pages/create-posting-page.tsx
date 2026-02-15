@@ -12,6 +12,11 @@ import {
   LoaderCircle,
   RefreshCw,
   Check,
+  Instagram,
+  ClipboardList,
+  ScrollText,
+  BadgeQuestionMark,
+  Lightbulb,
 } from "lucide-react";
 import {
   generatePosting,
@@ -314,13 +319,13 @@ export type GenerateFormData = {
 function ChoiceButton({
   active,
   onClick,
-  img,
+  icon,
   title,
   description,
 }: {
   active: boolean;
   onClick: () => void;
-  img: string;
+  icon: any;
   title: string;
   description: string;
 }) {
@@ -328,19 +333,20 @@ function ChoiceButton({
     <button
       type="button"
       onClick={onClick}
+      className="flex items-center gap-5"
       style={{
         textAlign: "left",
-        padding: 14,
+        padding: 18,
         borderRadius: 14,
         border: active ? "2px solid black" : "1px solid #ddd",
         background: active ? "#f2f2f2" : "white",
         cursor: "pointer",
       }}
     >
-      <img src={img} />
+      <p className="text-5xl">{icon}</p>
       <div>
-        <h3>{title}</h3>
-        <p>{description}</p>
+        <h3 className="font-bold text-lg">{title}</h3>
+        <p className="text-sm">{description}</p>
       </div>
     </button>
   );
@@ -599,7 +605,7 @@ export default function CreatePostingPage({
                     onClick={() =>
                       setPayload((p) => ({ ...p, platform: "instagram" }))
                     }
-                    img=""
+                    icon="📷"
                     title="인스타그램"
                     description="이미지 중심의 짧은 컨텐츠"
                   />
@@ -631,7 +637,7 @@ export default function CreatePostingPage({
                     onClick={() =>
                       setPayload((p) => ({ ...p, template: "basic" }))
                     }
-                    img=""
+                    icon={<ScrollText size={34} />}
                     title="기본 포맷"
                     description="간단하고 깔끔한 기본 포스팅 형식"
                   />
@@ -640,25 +646,16 @@ export default function CreatePostingPage({
                     onClick={() =>
                       setPayload((p) => ({ ...p, template: "list" }))
                     }
-                    img=""
+                    icon={<ClipboardList size={34} />}
                     title="리스트형"
                     description="정보를 리스트로 정리한 실용적인 포맷"
-                  />
-                  <ChoiceButton
-                    active={payload.template === "image"}
-                    onClick={() =>
-                      setPayload((p) => ({ ...p, template: "image" }))
-                    }
-                    img=""
-                    title="이미지 중심"
-                    description="이미지를 강조한 시각적인 포스팅"
                   />
                   <ChoiceButton
                     active={payload.template === "question"}
                     onClick={() =>
                       setPayload((p) => ({ ...p, template: "question" }))
                     }
-                    img=""
+                    icon={<BadgeQuestionMark size={34} />}
                     title="질문형"
                     description="질문으로 시작해서 참여를 유도하는 포맷"
                   />
@@ -667,7 +664,7 @@ export default function CreatePostingPage({
                     onClick={() =>
                       setPayload((p) => ({ ...p, template: "tip-knowhow" }))
                     }
-                    img=""
+                    icon={<Lightbulb />}
                     title="팁 & 노하우"
                     description="실용적인 팁과 노하우를 전달하는 포맷"
                   />

@@ -59,6 +59,14 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return redirect("/dashboard", { headers });
 };
 
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client, headers } = makeSSRClient(request);
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (user) return redirect("/dashboard");
+};
+
 export default function join({ actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
