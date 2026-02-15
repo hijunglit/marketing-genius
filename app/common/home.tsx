@@ -70,9 +70,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <p style={styles.mockCaption}>
-            여기에 나중에 실제 스크린샷/영상으로 교체
-          </p>
         </div>
       </section>
 
@@ -177,7 +174,7 @@ export default function Home() {
           />
           <FAQ
             q="어떤 플랫폼을 지원하나요?"
-            a="Instagram, Threads 등 텍스트 중심 SNS부터 우선 지원합니다. 계속 확장 예정입니다."
+            a="Instagram 등 텍스트 중심 SNS부터 우선 지원합니다. 계속 확장 예정입니다."
           />
           <FAQ
             q="브랜드 톤은 어떻게 반영되나요?"
