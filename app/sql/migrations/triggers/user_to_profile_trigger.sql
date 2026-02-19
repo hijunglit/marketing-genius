@@ -1,3 +1,5 @@
+drop function if exists public.handle_new_user() CASCADE;
+
 create function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -6,7 +8,8 @@ set search_path = ''
 as $$
 begin 
     if new.raw_app_meta_data is not null then
-    -- ? : JSON객체에 특정 키가 있는지 알려줌 ->>: JSON객체의 특정 키에서 값을 뽑아줌 --
+    -- ? : JSON객체에 특정 키가 있는지 알려줌 
+    -- ->>: JSON객체의 특정 키에서 값을 뽑아줌
         if new.raw_app_meta_data ? 'provider' AND new.raw_app_meta_data ->> 'provider' = 'email' then
             if new.raw_user_meta_data ? 'name' AND new.raw_user_meta_data ? 'username' then
                 insert into public.profiles(profile_id, name, username)
@@ -15,6 +18,11 @@ begin
                 insert into public.profiles(profile_id, name, username)
                 values(new.id, 'Anonnymous', 'mr.' || substr(md5(random()::text), 1, 8));
             end if;
+        end if;
+
+        if new.raw_app_meta_data ? 'provider' AND new.raw_app_meta_data ->> 'provider' = 'kakao' then
+            insert into public.profiles(profile_id, name, username, avatar_url)
+            values(new.id, new.raw_user_meta_data ->> 'name', new.raw_user_meta_data ->> 'preferred_username'|| substr(md5(random()::text), 1, 5), new.raw_user_meta_data ->> 'avatar_url');
         end if;
     end if;
     return new;

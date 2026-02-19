@@ -15,6 +15,7 @@ import { Label } from "~/common/components/ui/label";
 import { z } from "zod";
 import type { Route } from "./+types/login-page";
 import { makeSSRClient } from "~/supa-client";
+import AuthButtons from "../components/auth-button";
 
 const formSchema = z.object({
   email: z
@@ -154,9 +155,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
             <span className="text-black">또는</span>
             <span></span>
           </div>
-          <Button variant="outline" className="w-full">
-            Google로 계속하기
-          </Button>
+          <AuthButtons />
           <div className="flex items-center">
             <span className="text-black">계정이 없으신가요?</span>
             <CardAction>
