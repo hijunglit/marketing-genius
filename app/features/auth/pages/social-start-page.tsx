@@ -10,9 +10,12 @@ const paramsSchema = z.object({
 export const loader = async ({ params, request }: Route.LoaderArgs) => {
   const { success, data } = paramsSchema.safeParse(params);
   if (!success) return redirect("/auth/login");
-
+  const isProd = (process.env.NODE_ENV = "production");
+  const basicUrl = isProd
+    ? "https://marketing-genius-teal.vercel.app"
+    : "http://localhost:5173";
   const { provider } = data;
-  const redirectTo = `http://localhost:5173/auth/social/${provider}/complete`;
+  const redirectTo = `${basicUrl}/auth/social/${provider}/complete`;
   const { client, headers } = makeSSRClient(request);
   const {
     data: { url },
