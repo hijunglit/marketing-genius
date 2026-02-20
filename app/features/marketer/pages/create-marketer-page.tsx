@@ -16,6 +16,7 @@ import z from "zod";
 import { makeSSRClient } from "~/supa-client";
 import { getLoggedInUser } from "~/features/users/queries";
 import { createMarketer } from "../mutations";
+import { getMarketer } from "../queries";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "Create Marketer" }];
@@ -33,7 +34,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const userId = await getLoggedInUser(client);
   const formData = await request.formData();
   const { success, data, error } = formSchema.safeParse(
-    Object.fromEntries(formData)
+    Object.fromEntries(formData),
   );
   if (!success) {
     return { formErrors: error.flatten().fieldErrors };
@@ -47,6 +48,18 @@ export const action = async ({ request }: Route.ActionArgs) => {
     userId,
   });
   return redirect(`/marketer/${marketerId}`);
+};
+
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client, headers } = makeSSRClient(request);
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) {
+    return redirect("/auth/login");
+  }
+  const marketer = await getMarketer(client, { id: user.id });
+  if (marketer.length !== 0) return redirect("/marketer");
 };
 
 export default function CreateMarketerPage({

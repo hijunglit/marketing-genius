@@ -1,4 +1,4 @@
-export const PLATFORM_TYPE = ["instagram"];
+export const PLATFORM_TYPE = ["instagram", "blog"];
 export const TEMPLATE_TYPE = [
   "basic",
   "list",

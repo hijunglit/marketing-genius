@@ -30,6 +30,7 @@ import { getLoggedInUser } from "~/features/users/queries";
 import { PLATFORM_TYPE, TEMPLATE_TYPE } from "../constants";
 import { getMarketer } from "~/features/marketer/queries";
 import { createBrowserClient } from "@supabase/ssr";
+import { Textarea } from "~/common/components/ui/textarea";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "포스팅 생성" }];
@@ -268,7 +269,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 };
 
 type Payload = {
-  platform: "instagram" | null;
+  platform: "instagram" | "blog" | null;
   template: "basic" | "list" | "image" | "question" | "tip-knowhow" | null;
   requestForm: {
     files: File[] | null;
@@ -301,15 +302,27 @@ type ConfirmPlanResponse = {
   targets: Array<{ order: number; path: string; token: string }>;
 };
 
+type RegenerateResponse = {
+  ok: true;
+  intent: "regenerate";
+  preview: PostingResponse;
+  requestId: number;
+  formData: GenerateFormData;
+};
+
 type ErrorResponse = {
   ok: false;
   error: any;
 };
 
-type ActionData = GenerateResponse | ConfirmPlanResponse | ErrorResponse;
+type ActionData =
+  | GenerateResponse
+  | ConfirmPlanResponse
+  | RegenerateResponse
+  | ErrorResponse;
 
 export type GenerateFormData = {
-  platform: "instagram" | string;
+  platform: "instagram" | "blog" | string;
   template: "image" | string;
   productName: string;
   targetCustomer: string;
@@ -381,6 +394,7 @@ export default function CreatePostingPage({
     return createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY);
   }, [env.SUPABASE_URL, env.SUPABASE_ANON_KEY]);
 
+  // generate/regenerate 응답 시에만 preview 초기화 (사용자 수정 내용 덮어쓰기 방지)
   useEffect(() => {
     const data = fetcher.data as ActionData | undefined;
     if (!data || !data.ok) return;
@@ -389,11 +403,18 @@ export default function CreatePostingPage({
       setPreview(data.preview);
       setRequestId(data.requestId);
     }
-    if (data.intent !== "confirm" || data.stage !== "plan") return;
-    if (!preview || requestId == null) return;
+    if (data.intent === "regenerate") {
+      setPreview(data.preview);
+    }
+  }, [fetcher.data]);
 
+  // confirm stage=plan 응답 시 이미지 업로드 후 finalize 제출
+  useEffect(() => {
+    const data = fetcher.data as ActionData | undefined;
+    if (!data || !data.ok || data.intent !== "confirm" || data.stage !== "plan")
+      return;
+    if (!preview || requestId == null) return;
     if (typeof requestId !== "number" || Number.isNaN(requestId)) return;
-    console.log("confirm actions response: ", data);
 
     (async () => {
       const { bucket, targets } = data as {
@@ -417,7 +438,6 @@ export default function CreatePostingPage({
           supabase.storage.from(bucket).getPublicUrl(t.path).data.publicUrl,
       );
 
-      // public urls
       setUploadUrls(urls);
 
       const formData = new FormData();
@@ -430,10 +450,9 @@ export default function CreatePostingPage({
       formData.append("imageUrls", JSON.stringify(urls));
 
       fetcher.submit(formData, { method: "post" });
-      console.log("This is upload urls", uploadUrls);
     })().catch((e) => {});
-    return () => previewUrls.forEach((u) => URL.revokeObjectURL(u));
-  }, [fetcher.data, selectedFiles, supabase, preview, requestId]);
+    // preview는 confirm 응답 시점의 값 사용 (의존성 제외로 중복 업로드 방지)
+  }, [fetcher.data, selectedFiles, supabase, requestId]);
 
   const onFileChanges = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -609,6 +628,15 @@ export default function CreatePostingPage({
                     title="인스타그램"
                     description="이미지 중심의 짧은 컨텐츠"
                   />
+                  <ChoiceButton
+                    active={payload.platform === "blog"}
+                    onClick={() =>
+                      setPayload((p) => ({ ...p, platform: "blog" }))
+                    }
+                    icon="📄"
+                    title="블로그"
+                    description="블로그 포스팅에 적합"
+                  />
                 </div>
                 <Separator />
                 <div className="flex justify-end">
@@ -710,10 +738,12 @@ export default function CreatePostingPage({
                       {previewUrls && (
                         <div className="flex gap-3">
                           {previewUrls.map((item, index) => (
-                            <div className="size-70 overflow-hidden rounded-3xl">
+                            <div
+                              className="size-70 overflow-hidden rounded-3xl"
+                              key={"preview-ctn" + index}
+                            >
                               <img
                                 src={item}
-                                key={"preview" + index}
                                 className="object-cover w-full h-full"
                               />
                             </div>
@@ -873,23 +903,61 @@ export default function CreatePostingPage({
 
                   {/* 텍스트 프리뷰 */}
                   <div className="space-y-4">
-                    <h3 className="font-bold text-xl">포스팅 내용</h3>
-                    <div className="bg-gray-50 p-6 rounded-lg space-y-4">
-                      <div>
-                        <p className="text-sm text-gray-500">제목</p>
-                        <p className="font-semibold text-lg">{preview.title}</p>
+                    <Form>
+                      <h3 className="font-bold text-xl">포스팅 내용</h3>
+                      <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                        <div>
+                          <Label
+                            className="text-sm text-gray-500"
+                            htmlFor="title"
+                          >
+                            제목
+                          </Label>
+                          <Input
+                            id="title"
+                            name="title"
+                            type="text"
+                            value={preview.title}
+                            className="font-semibold text-lg"
+                            onChange={(e) =>
+                              setPreview((p) => ({
+                                title: e.target.value,
+                                text: p?.text || "",
+                                hashtags: p?.hashtags || [""],
+                              }))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label
+                            htmlFor="text"
+                            className="text-sm text-gray-500"
+                          >
+                            본문
+                          </label>
+                          <Textarea
+                            id="text"
+                            name="text"
+                            value={preview.text}
+                            className="whitespace-pre-wrap"
+                            onChange={(e) =>
+                              setPreview((p) => ({
+                                ...p,
+                                title: p?.title || "",
+                                text: e.target.value,
+                                hashtags: p?.hashtags || [""],
+                              }))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">해시태그</p>
+                          <p className="text-blue-600">
+                            {preview.hashtags.join(" ")}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">본문</p>
-                        <p className="whitespace-pre-wrap">{preview.text}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">해시태그</p>
-                        <p className="text-blue-600">
-                          {preview.hashtags.join(" ")}
-                        </p>
-                      </div>
-                    </div>
+                    </Form>
                   </div>
                 </div>
 
