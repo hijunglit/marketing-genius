@@ -69,7 +69,7 @@ export default function CreateMarketerPage({
   const isSubmitting =
     navigation.state === "loading" || navigation.state === "submitting";
   return (
-    <div className="p-20 space-y-10">
+    <div className="p-8 sm:p-20 space-y-10">
       <Card className="w-full max-w-4xl space-y-2">
         <CardHeader className="text-center w-xs m-auto">
           <CardTitle className="text-3xl font-bold">마케터 생성</CardTitle>

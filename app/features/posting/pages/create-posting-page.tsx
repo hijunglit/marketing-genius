@@ -564,8 +564,10 @@ export default function CreatePostingPage({
         <>
           <header className="flex justify-between">
             <div className="space-y-3">
-              <h1 className="font-extrabold text-4xl">새 포스팅 생성</h1>
-              <p className="text-lg text-gray-500">
+              <h1 className="text-xl lg:text-2xl font-extrabold">
+                새 포스팅 생성
+              </h1>
+              <p className="hidden lg:block text-sm text-gray-500">
                 기업 정보를 기반으로 소셜 미디어 포스팅을 자동으로 생성합니다.
               </p>
             </div>
@@ -613,12 +615,12 @@ export default function CreatePostingPage({
             {step === 1 && (
               <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
                 <div className="space-y-3">
-                  <h2 className="font-extrabold text-3xl">플랫폼 선택</h2>
-                  <p className="text-lg text-gray-500">
+                  <h2 className="font-bold text-lg sm:text-xl">플랫폼 선택</h2>
+                  <p className="text-sm sm:text-base text-gray-500">
                     포스팅할 플랫폼을 선택하세요
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid lg:grid-cols-2 gap-4">
                   <ChoiceButton
                     active={payload.platform === "instagram"}
                     onClick={() =>

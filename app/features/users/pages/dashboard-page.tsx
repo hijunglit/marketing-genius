@@ -87,10 +87,10 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 };
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-  console.log(loaderData);
+  const contents = loaderData;
   return (
     <div className="p-20 space-y-10">
-      <header className="flex justify-between items-center">
+      <header className="flex flex-col gap-3.5 lg:flex-row md:flex-row sm:flex-row justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">대시보드</h1>
           <p>오늘의 마케팅 현황을 한눈에 확인하세요.</p>
@@ -134,55 +134,68 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           </div>
         </section>
         <section>
-          <div className="flex justify-between">
-            <h3 className="text-lg font-bold">최근 포스팅</h3>
-            <Link to={"/contents"} className="flex items-center">
-              전체보기
-              <ChevronRightIcon />
-            </Link>
-          </div>
-          <div className="flex flex-col gap-7">
-            {loaderData.map((contents, index) => (
-              <Link to={"/contents/:id"} key={"contents" + index}>
-                <Card>
-                  <div className="flex justify-between px-4">
-                    <div className="flex">
-                      <div className="flex items-center gap-4">
-                        <div className="size-12 rounded-xl shadow-lg overflow-hidden">
-                          {contents.images.length > 0 ? (
-                            <img src={contents.images[0].image_url} />
-                          ) : null}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">
-                            {contents.request_contents[0].title}
-                          </p>
-                          <span className="text-xs">
-                            {contents.request_contents[0].product_name}
-                          </span>
-                          <div className="flex items-center text-xs">
-                            <ClockIcon size={10} />
-                            <span>
-                              {DateTime.fromISO(
-                                contents.created_at
-                              ).toRelative()}
-                            </span>
+          {contents.length > 0 ? (
+            <div>
+              <div className="flex justify-between">
+                <h3 className="text-lg font-bold">최근 포스팅</h3>
+                <Link to={"/contents"} className="flex items-center">
+                  전체보기
+                  <ChevronRightIcon />
+                </Link>
+              </div>
+              <div className="flex flex-col gap-7">
+                {loaderData.map((contents, index) => (
+                  <Link to={"/contents/:id"} key={"contents" + index}>
+                    <Card>
+                      <div className="flex justify-between px-4">
+                        <div className="flex">
+                          <div className="flex items-center gap-4">
+                            <div className="size-12 rounded-xl shadow-lg overflow-hidden">
+                              {contents.images.length > 0 ? (
+                                <img src={contents.images[0].image_url} />
+                              ) : null}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold">
+                                {contents.request_contents[0].title}
+                              </p>
+                              <span className="text-xs">
+                                {contents.request_contents[0].product_name}
+                              </span>
+                              <div className="flex items-center text-xs">
+                                <ClockIcon size={10} />
+                                <span>
+                                  {DateTime.fromISO(
+                                    contents.created_at,
+                                  ).toRelative()}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="text-gray-500 text-sm">
+                              생성된 포스팅
+                            </p>
+                            <p className="font-bold">1개</p>
+                          </div>
+                          <ChevronRightIcon color="#ccc" />
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-gray-500 text-sm">생성된 포스팅</p>
-                        <p className="font-bold">1개</p>
-                      </div>
-                      <ChevronRightIcon color="#ccc" />
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <h3 className="text-lg font-bold text-left">최근 포스팅</h3>
+              <div className="flex flex-col gap-7">
+                <h1 className="text-center">생성한 포스팅이 없습니다.</h1>
+              </div>
+            </div>
+          )}
         </section>
       </main>
     </div>
