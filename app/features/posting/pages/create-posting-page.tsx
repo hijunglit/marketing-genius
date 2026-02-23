@@ -202,7 +202,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
       const parsed = regenerateSchema.safeParse(Object.fromEntries(formData));
       console.log("regenerate side form data:", formData);
       if (!parsed.success) {
-        console.log(parsed.error);
+        console.log(parsed.error.format());
         return { ok: false, error: "재생성 데이터가 올바르지 않습니다" };
       }
       const {
@@ -491,9 +491,6 @@ export default function CreatePostingPage({
     formData.append("intent", "generate");
     formData.append("platform", payload.platform);
     formData.append("template", payload.template);
-    // Array.from(payload.requestForm.files || []).forEach((file) => {
-    //   formData.append("files", file);
-    // });
     formData.append("productName", payload.requestForm.productName);
     formData.append("targetCustomer", payload.requestForm.targetCustomer);
     formData.append("coreCharacter", payload.requestForm.coreCharacter);
@@ -536,7 +533,7 @@ export default function CreatePostingPage({
     formData.append("productName", lastGenerateForm.productName);
     formData.append("targetCustomer", lastGenerateForm.targetCustomer);
     formData.append("coreCharacter", lastGenerateForm.coreCharacter);
-    formData.append("aiId", String(loaderData.marketer[0].ai_id));
+    formData.append("aiId", String(aiId));
 
     fetcher.submit(formData, { method: "post" });
   };

@@ -89,7 +89,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
   const contents = loaderData;
   return (
-    <div className="p-20 space-y-10">
+    <div className="p-6 lg:p-20 space-y-10">
       <header className="flex flex-col gap-3.5 lg:flex-row md:flex-row sm:flex-row justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">대시보드</h1>

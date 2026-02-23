@@ -17,7 +17,7 @@ export default function Navigation({
   email?: string;
 }) {
   return isLoggedIn ? (
-    <nav>
+    <nav className="absolute md:relative">
       <SidebarProvider className="w-fit">
         <AppSidebar
           name={name}

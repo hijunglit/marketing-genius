@@ -1,13 +1,13 @@
 import {
   Bot,
   Calendar,
+  ChevronDown,
   ChevronUp,
   Home,
-  Inbox,
+  House,
   LayoutDashboard,
+  Plus,
   Search,
-  Settings,
-  User2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -16,9 +16,11 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "./ui/sidebar";
 import {
   DropdownMenu,
@@ -28,6 +30,7 @@ import {
 } from "./ui/dropdown-menu";
 import { Link } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Separator } from "./ui/separator";
 
 // Menu items.
 const items = [
@@ -39,7 +42,7 @@ const items = [
   {
     title: "포스팅 요청",
     url: "/posting/create",
-    icon: Home,
+    icon: Plus,
   },
   {
     title: "마케터 관리",
@@ -75,13 +78,23 @@ export function AppSidebar({
   email?: string;
 }) {
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to={"/"}>
+                <Home />
+                <span>Marketing Genius</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>
-            <Link to={"/"} className="font-bold">
-              Marrketing Genius
-            </Link>
+            <Separator />
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

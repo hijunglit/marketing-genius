@@ -13,6 +13,11 @@ import { getContents } from "../queries";
 import { DateTime } from "luxon";
 import { Separator } from "~/common/components/ui/separator";
 import { makeSSRClient } from "~/supa-client";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "~/common/components/ui/dialog";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "컨텐츠 | Marketing Genius" }];
@@ -33,7 +38,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export default function ContentsPage({ loaderData }: Route.ComponentProps) {
   const contents = loaderData;
   return (
-    <div className="p-20 space-y-10">
+    <div className="p-4 lg:p-20 space-y-10">
       <header className="flex flex-col text-center gap-2 justify-between items-center sm:flex-row sm:text-left">
         <div>
           <h1 className="text-2xl font-bold">내 컨텐츠</h1>
@@ -68,40 +73,59 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
         </section>
         <section>
           {contents.length > 0 ? (
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid lg:grid-cols-2 gap-5">
               {loaderData.map((contents, index) => (
-                <Card className="col-span-1" key={"contents" + index}>
-                  <CardHeader>
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="text-xl font-bold">
-                          {contents.request_contents[0].title}
-                        </p>
-                        <Button className="text-xs">
-                          {contents.request_contents[0].platform}
-                        </Button>
+                <Dialog key={"model" + index}>
+                  {contents.request_contents[0].platform === "instagram" ? (
+                    <DialogContent>
+                      {contents.request_contents[0].platform}
+                    </DialogContent>
+                  ) : (
+                    <DialogContent>
+                      {contents.request_contents[0].platform}
+                    </DialogContent>
+                  )}
+                  <Card
+                    className="flex flex-col justify-between w-full h-[255px]"
+                    key={"contents" + index}
+                  >
+                    <CardHeader>
+                      <div className="flex justify-between">
+                        <div>
+                          <p className="text-base font-bold">
+                            {contents.request_contents[0].title}
+                          </p>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={`text-xs p-1.5 rounded-md cursor-pointer ${contents.request_contents[0].platform === "instagram" ? "bg-[#fdf2f8] text-[#be185d]" : "bg-[#f0fdf4] text-[#15803D]"}`}
+                            >
+                              {contents.request_contents[0].platform}
+                            </Button>
+                          </DialogTrigger>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <Link to={"/contents/:id"} key={"contents" + index}>
+                            <SquarePen size={16} />
+                          </Link>
+                          <Trash2 size={16} />
+                        </div>
                       </div>
-                      <div className="flex gap-1.5">
-                        <Link to={"/contents/:id"} key={"contents" + index}>
-                          <SquarePen size={16} />
-                        </Link>
-                        <Trash2 size={16} />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="bg-gray-100 p-3 rounded-2xl h-[56px] overflow-hidden text-ellipsis">
+                        <p className="text-xs">{contents.text}</p>
                       </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-100 p-3 rounded-2xl">
-                      <p>{contents.text}</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <div>
-                      <p>{contents.images.length} MEDIA</p>
-                      <p>{contents.hashtag.length} TAGS</p>
-                    </div>
-                    <Separator />
-                  </CardFooter>
-                </Card>
+                    </CardContent>
+                    <CardFooter className="flex flex-col">
+                      <div className=" w-full text-xs flex justify-start gap-2">
+                        <span>{contents.images.length} MEDIA</span>
+                        <span>{contents.hashtag.split(" ").length} TAGS</span>
+                      </div>
+                      <Separator />
+                    </CardFooter>
+                  </Card>
+                </Dialog>
               ))}
             </div>
           ) : (
