@@ -16,8 +16,18 @@ import { makeSSRClient } from "~/supa-client";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "~/common/components/ui/dialog";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "~/common/components/ui/carousel";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "컨텐츠 | Marketing Genius" }];
@@ -77,8 +87,31 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
               {loaderData.map((contents, index) => (
                 <Dialog key={"model" + index}>
                   {contents.request_contents[0].platform === "instagram" ? (
-                    <DialogContent>
-                      {contents.request_contents[0].platform}
+                    <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2">
+                      <div>
+                        <Carousel>
+                          <CarouselContent>
+                            {contents.images.map((image, index) => (
+                              <CarouselItem key={image.image_url + index}>
+                                <img src={image.image_url} />
+                              </CarouselItem>
+                            ))}
+                          </CarouselContent>
+                          <CarouselPrevious />
+                          <CarouselNext />
+                        </Carousel>
+                      </div>
+                      <div>
+                        <DialogHeader>
+                          <DialogTitle>
+                            {contents.request_contents[0].title}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div>{contents.text}</div>
+                        <DialogFooter>
+                          {contents.hashtag.split(" ")}
+                        </DialogFooter>
+                      </div>
                     </DialogContent>
                   ) : (
                     <DialogContent>
