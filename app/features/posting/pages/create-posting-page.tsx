@@ -69,13 +69,11 @@ const confirmSchema = z.discriminatedUnion("stage", [
 
 const regenerateSchema = z.object({
   intent: z.literal("regenerate"),
-  platform: z.string(),
-  template: z.string(),
+  platform: z.enum(PLATFORM_TYPE as [string, ...string[]]),
+  template: z.enum(TEMPLATE_TYPE as [string, ...string[]]),
   productName: z.string(),
   targetCustomer: z.string(),
   coreCharacter: z.string(),
-  requestId: z.coerce.number(),
-  imageUrls: z.string(), // JSON string
   aiId: z.coerce.number(),
 });
 
@@ -89,6 +87,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     // Generate: 이미지 업로드 + request_contents 생성 + LLM 호출
     if (intent === "generate") {
       const parsed = generateSchema.safeParse(Object.fromEntries(formData));
+      console.log("generate side form data:", formData);
       if (!parsed.success) {
         return { ok: false, error: "입력값이 올바르지 않습니다" };
       }
@@ -201,7 +200,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
     // Regenerate: 같은 requestId로 다시 LLM 호출
     if (intent === "regenerate") {
       const parsed = regenerateSchema.safeParse(Object.fromEntries(formData));
+      console.log("regenerate side form data:", formData);
       if (!parsed.success) {
+        console.log(parsed.error);
         return { ok: false, error: "재생성 데이터가 올바르지 않습니다" };
       }
       const {
@@ -210,8 +211,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
         productName,
         targetCustomer,
         coreCharacter,
-        requestId,
-        imageUrls,
         aiId,
       } = parsed.data;
 
@@ -228,8 +227,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
         ok: true,
         intent: "regenerate",
         preview,
-        requestId,
-        imageUrls: JSON.parse(imageUrls),
         formData: {
           platform,
           template,
@@ -530,7 +527,7 @@ export default function CreatePostingPage({
 
   // 재생성하기 submit
   const handleRegenerate = () => {
-    if (!lastGenerateForm || requestId === null) return;
+    if (!lastGenerateForm || requestId === null || !isMarketerExist) return;
 
     const formData = new FormData();
     formData.append("intent", "regenerate");
@@ -539,7 +536,7 @@ export default function CreatePostingPage({
     formData.append("productName", lastGenerateForm.productName);
     formData.append("targetCustomer", lastGenerateForm.targetCustomer);
     formData.append("coreCharacter", lastGenerateForm.coreCharacter);
-    formData.append("requestId", String(requestId));
+    formData.append("aiId", String(loaderData.marketer[0].ai_id));
 
     fetcher.submit(formData, { method: "post" });
   };
@@ -962,7 +959,11 @@ export default function CreatePostingPage({
                     </Form>
                   </div>
                 </div>
-
+                {fetcher.data?.ok === false && (
+                  <p className="text-red-500 text-center">
+                    {fetcher.data.error || "전송에 실패했습니다."}
+                  </p>
+                )}
                 <Separator />
 
                 <div className="flex justify-between">
