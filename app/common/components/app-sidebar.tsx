@@ -32,51 +32,47 @@ import { Link } from "react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Separator } from "./ui/separator";
 
-// Menu items.
-const items = [
-  {
-    title: "대시보드",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "포스팅 요청",
-    url: "/posting/create",
-    icon: Plus,
-  },
-  {
-    title: "마케터 관리",
-    url: "/#",
-    icon: Calendar,
-  },
-  {
-    title: "포스팅 목록",
-    url: "/contents",
-    icon: Search,
-  },
-  {
-    title: "마케터 생성",
-    url: "/marketer/create",
-    icon: Bot,
-  },
-  // {
-  //   title: "설정",
-  //   url: "#",
-  //   icon: Settings,
-  // },
-];
-
 export function AppSidebar({
   name,
   username,
   avatar,
   email,
+  marketerId,
 }: {
   name?: string;
   username?: string;
   avatar?: string;
   email?: string;
+  marketerId: number | null;
 }) {
+  // Menu items.
+  const items = [
+    {
+      title: "대시보드",
+      url: "/dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "포스팅 요청",
+      url: "/posting/create",
+      icon: Plus,
+    },
+    {
+      title: "마케터 관리",
+      url: marketerId !== null ? "/marketer/" + marketerId : "/marketer/create",
+      icon: Calendar,
+    },
+    {
+      title: "포스팅 목록",
+      url: "/contents",
+      icon: Search,
+    },
+    {
+      title: "마케터 생성",
+      url: "/marketer/create",
+      icon: Bot,
+    },
+  ];
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>

@@ -8,6 +8,7 @@ export default function Navigation({
   username,
   avatar,
   email,
+  marketerId,
 }: {
   children: React.ReactNode;
   isLoggedIn: boolean;
@@ -15,6 +16,7 @@ export default function Navigation({
   username?: string;
   avatar?: string;
   email?: string;
+  marketerId: number | null;
 }) {
   return isLoggedIn ? (
     <nav className="absolute md:relative">
@@ -24,6 +26,7 @@ export default function Navigation({
           username={username}
           avatar={avatar}
           email={email}
+          marketerId={marketerId}
         />
         <main>
           <SidebarTrigger />

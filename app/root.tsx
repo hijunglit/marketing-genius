@@ -16,6 +16,7 @@ import { cn } from "./lib/utils";
 import { makeSSRClient } from "./supa-client";
 import { getUserById } from "./features/users/queries";
 import styleseet from "./app.css?url";
+import { getMarketer } from "./features/marketer/queries";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -63,6 +64,11 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
   if (user) {
     const profile = await getUserById(client, { id: user?.id });
+    const marketer = await getMarketer(client, { id: user.id });
+    if (marketer.length > 0) {
+      const marketerId = marketer[0].ai_id;
+      return { user, profile, marketerId, ENV };
+    }
     return { user, profile, ENV };
   }
   return { user: null, profile: null, ENV };
@@ -80,6 +86,7 @@ export default function App({
   const navigation = useNavigation();
   const isLoading = navigation.state === "loading";
   const isLoggedIn = loaderData.user !== null;
+  const marketerId = loaderData.marketerId ?? null;
   return (
     <div
       className={cn({
@@ -95,6 +102,7 @@ export default function App({
           username={loaderData.profile?.username}
           avatar={loaderData.profile?.avatar_url}
           email={loaderData.user?.email}
+          marketerId={marketerId ? marketerId : null}
         />
       )}
       <div className="w-full">
