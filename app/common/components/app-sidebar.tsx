@@ -46,7 +46,7 @@ const items = [
   },
   {
     title: "마케터 관리",
-    url: "/marketer",
+    url: "/#",
     icon: Calendar,
   },
   {

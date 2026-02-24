@@ -59,7 +59,7 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     return redirect("/auth/login");
   }
   const marketer = await getMarketer(client, { id: user.id });
-  if (marketer.length !== 0) return redirect("/marketer");
+  if (marketer.length !== 0) return redirect(`/marketer/${marketer[0].ai_id}`);
 };
 
 export default function CreateMarketerPage({

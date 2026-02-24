@@ -15,6 +15,7 @@ import { Separator } from "~/common/components/ui/separator";
 import { makeSSRClient } from "~/supa-client";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
@@ -86,11 +87,11 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
             <div className="grid lg:grid-cols-2 gap-5">
               {loaderData.map((contents, index) => (
                 <Dialog key={"model" + index}>
-                  {contents.request_contents[0].platform === "instagram" ? (
+                  {contents.request_contents[0].platform === "instagram" && (
                     <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2">
                       <div>
                         <Carousel>
-                          <CarouselContent>
+                          <CarouselContent className="max-w-[1024px] w-full max-h-[650px] h-full">
                             {contents.images.map((image, index) => (
                               <CarouselItem key={image.image_url + index}>
                                 <img src={image.image_url} />
@@ -113,9 +114,38 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                         </DialogFooter>
                       </div>
                     </DialogContent>
-                  ) : (
-                    <DialogContent>
-                      {contents.request_contents[0].platform}
+                  )}
+                  {contents.request_contents[0].platform === "blog" && (
+                    <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full">
+                      <DialogHeader>
+                        <h1 className="text-[#15803D] font-bold text-lg">
+                          블로그
+                        </h1>
+                      </DialogHeader>
+                      <Separator className="bg-[#15803D]" />
+                      <div className="no-scrollbar h-full overflow-y-auto px-4">
+                        <div>
+                          <h1 className="text-3xl font-bold">
+                            {contents.request_contents[0].title}
+                          </h1>
+                          <span className="text-gray-400 text-sm">
+                            이미지 {contents.images.length} 개
+                          </span>
+                        </div>
+                        <Separator />
+                        {contents.images.map((img, index) => (
+                          <div
+                            key={"preview:" + img.image_url + index}
+                            className="max-w-3xl w-full"
+                          >
+                            <img src={img.image_url} className="object-cover" />
+                          </div>
+                        ))}
+                        <p>{contents.text}</p>
+                      </div>
+                      <DialogClose asChild>
+                        <Button variant={"outline"}>닫기</Button>
+                      </DialogClose>
                     </DialogContent>
                   )}
                   <Card
@@ -138,7 +168,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                           </DialogTrigger>
                         </div>
                         <div className="flex gap-1.5">
-                          <Link to={"/contents/:id"} key={"contents" + index}>
+                          <Link to={"#"} key={"contents" + index}>
                             <SquarePen size={16} />
                           </Link>
                           <Trash2 size={16} />

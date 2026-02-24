@@ -24,33 +24,6 @@ import { makeSSRClient } from "~/supa-client";
 import { DateTime } from "luxon";
 import { getUserById } from "../queries";
 
-const top_items = [
-  {
-    icon: File,
-    enTitle: "Total",
-    koTitle: "전체 포스팅",
-    amount: 1,
-  },
-  {
-    icon: Bot,
-    enTitle: "Marketer",
-    koTitle: "마케터",
-    amount: 1,
-  },
-  {
-    icon: Calendar,
-    enTitle: "Scheduled",
-    koTitle: "예약됨",
-    amount: 1,
-  },
-  {
-    icon: Clock,
-    enTitle: "Published",
-    koTitle: "발행 완료",
-    amount: 1,
-  },
-];
-
 const quick_run_items = [
   {
     icon: PlusIcon,
@@ -70,7 +43,7 @@ const quick_run_items = [
   {
     icon: NotebookText,
     title: "마케터 관리",
-    url: "/marketer",
+    url: "/#",
   },
 ];
 
@@ -83,11 +56,39 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     return redirect("/auth/login");
   }
   const contents = await getContents(client, { id: user?.id });
-  return contents;
+  return { contents, user };
 };
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-  const contents = loaderData;
+  const contents = loaderData.contents;
+  const user = loaderData.user;
+  const top_items = [
+    {
+      icon: File,
+      enTitle: "Total",
+      koTitle: "전체 포스팅",
+      amount: contents.length,
+    },
+    // {
+    //   icon: Bot,
+    //   enTitle: "Marketer",
+    //   koTitle: "마케터",
+    //   amount: 0,
+    // },
+    {
+      icon: Calendar,
+      enTitle: "Scheduled",
+      koTitle: "예약됨",
+      amount: 0,
+    },
+    {
+      icon: Clock,
+      enTitle: "Published",
+      koTitle: "발행 완료",
+      amount: 0,
+    },
+  ];
+
   return (
     <div className="p-6 lg:p-20 space-y-10">
       <header className="flex flex-col gap-3.5 lg:flex-row md:flex-row sm:flex-row justify-between items-center">
@@ -144,7 +145,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                 </Link>
               </div>
               <div className="flex flex-col gap-7">
-                {loaderData.map((contents, index) => (
+                {contents.map((contents, index) => (
                   <Link to={"/contents/:id"} key={"contents" + index}>
                     <Card>
                       <div className="flex justify-between px-4">

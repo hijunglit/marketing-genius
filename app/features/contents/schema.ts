@@ -23,8 +23,9 @@ export const images = pgTable("images", {
   image_id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
   image_url: text().notNull(),
   contents_id: bigint({ mode: "number" }).references(
-    () => contents.contents_id
+    () => contents.contents_id,
   ),
+  created_at: timestamp().notNull().defaultNow(),
 });
 
 export const requestContents = pgTable("request_contents", {
@@ -33,7 +34,7 @@ export const requestContents = pgTable("request_contents", {
     .generatedAlwaysAsIdentity(),
   contents_id: bigint({ mode: "number" }).references(
     () => contents.contents_id,
-    { onDelete: "set null" }
+    { onDelete: "set null" },
   ),
   profile_id: uuid()
     .references(() => profiles.profile_id)

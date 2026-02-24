@@ -43,6 +43,13 @@
       "when": 1770027976215,
       "tag": "0005_rich_silverclaw",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771899124938,
+      "tag": "0006_faulty_nuke",
+      "breakpoints": true
     }
   ]
 }
