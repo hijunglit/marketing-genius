@@ -91,10 +91,13 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                     <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2">
                       <div>
                         <Carousel>
-                          <CarouselContent className="max-w-[1024px] w-full max-h-[650px] h-full">
+                          <CarouselContent className="max-w-[500px] w-full max-h-[550px] h-full">
                             {contents.images.map((image, index) => (
                               <CarouselItem key={image.image_url + index}>
-                                <img src={image.image_url} />
+                                <img
+                                  src={image.image_url}
+                                  className="object-cover w-full h-full"
+                                />
                               </CarouselItem>
                             ))}
                           </CarouselContent>

@@ -176,10 +176,10 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <p className="text-gray-500 text-sm">
+                            {/* <p className="text-gray-500 text-sm">
                               생성된 포스팅
                             </p>
-                            <p className="font-bold">1개</p>
+                            <p className="font-bold">1개</p> */}
                           </div>
                           <ChevronRightIcon color="#ccc" />
                         </div>
