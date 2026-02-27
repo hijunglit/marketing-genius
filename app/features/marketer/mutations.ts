@@ -15,7 +15,7 @@ export const createMarketer = async (
     coreService: string;
     aboutCompany: string;
     userId: string;
-  }
+  },
 ) => {
   const { data, error } = await client
     .from("ai")
@@ -30,4 +30,34 @@ export const createMarketer = async (
     .single();
   if (error) throw error;
   return data.ai_id;
+};
+
+export const updateMarketer = async (
+  client: SupabaseClient<Database>,
+  {
+    id,
+    brandName,
+    category,
+    description,
+    coreService,
+  }: {
+    id: string;
+    brandName: string;
+    category: string;
+    description: string;
+    coreService: string;
+  },
+) => {
+  const { error } = await client
+    .from("ai")
+    .update({
+      company_name: brandName,
+      category,
+      company_description: description,
+      core_service: coreService,
+    })
+    .eq("profile_id", id);
+  if (error) {
+    throw error;
+  }
 };

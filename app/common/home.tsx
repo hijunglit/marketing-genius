@@ -31,13 +31,13 @@ export default function Home() {
         <div style={styles.heroLeft}>
           <h1 style={styles.h1}>마케팅 글, 이제 10분이면 충분합니다</h1>
           <p style={styles.sub}>
-            브랜드 정보 기반으로 Instagram/Threads 게시글을 자동 생성합니다.
+            브랜드 정보 기반으로 인스타그램 게시글을 자동 생성합니다.
             <br />
             초안 + 해시태그 + 콘텐츠 구조까지 한 번에.
           </p>
 
           <div style={styles.ctaRow}>
-            <a href="/signup" style={styles.primaryCta}>
+            <a href="/auth/join" style={styles.primaryCta}>
               무료로 시작하기
             </a>
             <a href="#demo" style={styles.secondaryCta}>
@@ -143,7 +143,7 @@ export default function Home() {
             subtitle="가볍게 시작"
             items={["월 30회 생성", "기본 템플릿", "기본 해시태그 추천"]}
             ctaText="무료로 시작하기"
-            ctaHref="/signup"
+            ctaHref="/auth/join"
             highlighted={false}
           />
           <PriceCard
@@ -152,7 +152,7 @@ export default function Home() {
             subtitle="꾸준히 성장"
             items={["월 300회 생성", "톤/템플릿 확장", "우선 생성 + 빠른 개선"]}
             ctaText="Pro로 업그레이드"
-            ctaHref="/upgrade"
+            ctaHref="#"
             highlighted={true}
           />
         </div>
@@ -202,7 +202,7 @@ export default function Home() {
             <Link to={"/auth/join"} style={styles.primaryCta}>
               무료로 시작하기
             </Link>
-            <Link to={"/#pricing"} style={styles.secondaryCta}>
+            <Link to={"#"} style={styles.secondaryCta}>
               요금 보기
             </Link>
           </div>
