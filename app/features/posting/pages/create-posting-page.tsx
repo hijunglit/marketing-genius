@@ -87,7 +87,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
     // Generate: 이미지 업로드 + request_contents 생성 + LLM 호출
     if (intent === "generate") {
       const parsed = generateSchema.safeParse(Object.fromEntries(formData));
-      console.log("generate side form data:", formData);
       if (!parsed.success) {
         return { ok: false, error: "입력값이 올바르지 않습니다" };
       }
@@ -159,12 +158,30 @@ export const action = async ({ request }: Route.ActionArgs) => {
           type: string;
           size: number;
         }>;
-        if (fileMeta.length === 0)
+        if (fileMeta.length === 0) {
           return { ok: false, error: "이미지는 필수입니다." };
+        }
+
+        const totalFileSize = fileMeta.reduce((acc, cur) => acc + cur.size, 0);
+        const maxSize = 5_097_152; // ~5MB
+        if (totalFileSize > maxSize) {
+          return {
+            ok: false,
+            error: `총 이미지 용량이 5MB를 초과합니다. (현재: ${(totalFileSize / 1024 / 1024).toFixed(2)}MB)`,
+          };
+        }
+        const invalidFile = fileMeta.find((f) => !f.type.startsWith("image/"));
+        if (invalidFile) {
+          return {
+            ok: false,
+            error: `지원하지 않는 파일 형식입니다: ${invalidFile.name}`,
+          };
+        }
+
         const bucket = "posting-images";
         const targets = await Promise.all(
-          fileMeta.map(async (m, order) => {
-            const ext = (m.name.split(".").pop() || "jpg").toLowerCase();
+          fileMeta.map(async (file, order) => {
+            const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
             const path = `posting/${userId}/${parsed.data.requestId}/${crypto.randomUUID()}.${ext}`;
 
             const { data, error } = await client.storage
@@ -200,7 +217,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
     // Regenerate: 같은 requestId로 다시 LLM 호출
     if (intent === "regenerate") {
       const parsed = regenerateSchema.safeParse(Object.fromEntries(formData));
-      console.log("regenerate side form data:", formData);
       if (!parsed.success) {
         console.log(parsed.error.format());
         return { ok: false, error: "재생성 데이터가 올바르지 않습니다" };
@@ -326,6 +342,21 @@ export type GenerateFormData = {
   coreCharacter: string;
 };
 
+const MAX_IMAGE_SIZE_BYTES = 5_097_152; // ~5MB
+
+function validateImageFiles(files: File[]): string | null {
+  if (files.length === 0) return "이미지는 필수입니다.";
+  const totalSize = files.reduce((acc, f) => acc + f.size, 0);
+  if (totalSize > MAX_IMAGE_SIZE_BYTES) {
+    return `총 이미지 용량이 5MB를 초과합니다. (현재: ${(totalSize / 1024 / 1024).toFixed(2)}MB)`;
+  }
+  const invalidFile = files.find((f) => !f.type.startsWith("image/"));
+  if (invalidFile) {
+    return `지원하지 않는 파일 형식입니다: ${invalidFile.name}`;
+  }
+  return null;
+}
+
 function ChoiceButton({
   active,
   onClick,
@@ -380,6 +411,9 @@ export default function CreatePostingPage({
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadUrls, setUploadUrls] = useState<string[]>([]);
+  const [fileValidationError, setFileValidationError] = useState<string | null>(
+    null,
+  );
 
   const [preview, setPreview] = useState<PostingResponse | null>(null);
   const [requestId, setRequestId] = useState<number | null>(null);
@@ -453,6 +487,8 @@ export default function CreatePostingPage({
 
   const onFileChanges = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
+    const error = validateImageFiles(files);
+    setFileValidationError(error);
     setSelectedFiles(files);
     setPreviewUrls((prev) => {
       prev.forEach((u) => URL.revokeObjectURL(u));
@@ -502,7 +538,12 @@ export default function CreatePostingPage({
   // 확정하기 submit
   const handleConfirm = () => {
     if (!preview || requestId == null) return;
-    if (selectedFiles.length === 0) return;
+    const validationError = validateImageFiles(selectedFiles);
+    if (validationError) {
+      setFileValidationError(validationError);
+      return;
+    }
+    setFileValidationError(null);
 
     const fileMeta = selectedFiles.map((f) => ({
       name: f.name,
@@ -580,7 +621,7 @@ export default function CreatePostingPage({
               </Button>
             </div>
           </header>
-          <main className="space-y-10">
+          <main className="space-y-10 max-w-7xl">
             {/* Progress */}
             <div className="flex justify-around shadow-2xl border rounded-2xl p-[50px]">
               {progress.map((n) => (
@@ -732,15 +773,15 @@ export default function CreatePostingPage({
                     <div className="space-y-2">
                       <Label htmlFor="files">이미지 업로드</Label>
                       {previewUrls && (
-                        <div className="flex gap-3">
+                        <div className="grid grid-cols-4 gap-4">
                           {previewUrls.map((item, index) => (
                             <div
-                              className="size-70 overflow-hidden rounded-3xl"
                               key={"preview-ctn" + index}
+                              className="w-2xs rounded-3xl overflow-hidden"
                             >
                               <img
                                 src={item}
-                                className="object-cover w-full h-full"
+                                className="object-cover w-full h-32"
                               />
                             </div>
                           ))}
@@ -756,6 +797,11 @@ export default function CreatePostingPage({
                         multiple
                         onChange={onFileChanges}
                       />
+                      {fileValidationError && (
+                        <p className="text-sm text-red-500">
+                          {fileValidationError}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="productName">제품/서비스명</Label>
@@ -842,7 +888,9 @@ export default function CreatePostingPage({
                   <Button
                     type="button"
                     onClick={handleGenerate}
-                    disabled={!isFormComplete || submitting}
+                    disabled={
+                      !isFormComplete || submitting || !!fileValidationError
+                    }
                     className="p-6"
                   >
                     {submitting ? (
@@ -961,6 +1009,11 @@ export default function CreatePostingPage({
                     {fetcher.data.error || "전송에 실패했습니다."}
                   </p>
                 )}
+                {fileValidationError && (
+                  <p className="text-red-500 text-center">
+                    {fileValidationError}
+                  </p>
+                )}
                 <Separator />
 
                 <div className="flex justify-between">
@@ -990,7 +1043,7 @@ export default function CreatePostingPage({
                     <Button
                       type="button"
                       onClick={handleConfirm}
-                      disabled={submitting}
+                      disabled={submitting || !!fileValidationError}
                       className="p-6"
                     >
                       {submitting ? (
