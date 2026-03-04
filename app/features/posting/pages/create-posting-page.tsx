@@ -17,6 +17,7 @@ import {
   ScrollText,
   BadgeQuestionMark,
   Lightbulb,
+  X,
 } from "lucide-react";
 import {
   generatePosting,
@@ -163,11 +164,11 @@ export const action = async ({ request }: Route.ActionArgs) => {
         }
 
         const totalFileSize = fileMeta.reduce((acc, cur) => acc + cur.size, 0);
-        const maxSize = 5_097_152; // ~5MB
+        const maxSize = 10_971_520; // ~20MB
         if (totalFileSize > maxSize) {
           return {
             ok: false,
-            error: `총 이미지 용량이 5MB를 초과합니다. (현재: ${(totalFileSize / 1024 / 1024).toFixed(2)}MB)`,
+            error: `총 이미지 용량이 10MB를 초과합니다. (현재: ${(totalFileSize / 1024 / 1024).toFixed(2)}MB)`,
           };
         }
         const invalidFile = fileMeta.find((f) => !f.type.startsWith("image/"));
@@ -342,13 +343,13 @@ export type GenerateFormData = {
   coreCharacter: string;
 };
 
-const MAX_IMAGE_SIZE_BYTES = 5_097_152; // ~5MB
+const MAX_IMAGE_SIZE_BYTES = 10_971_520; // ~10MB
 
 function validateImageFiles(files: File[]): string | null {
   if (files.length === 0) return "이미지는 필수입니다.";
   const totalSize = files.reduce((acc, f) => acc + f.size, 0);
   if (totalSize > MAX_IMAGE_SIZE_BYTES) {
-    return `총 이미지 용량이 5MB를 초과합니다. (현재: ${(totalSize / 1024 / 1024).toFixed(2)}MB)`;
+    return `총 이미지 용량이 10MB를 초과합니다. (현재: ${(totalSize / 1024 / 1024).toFixed(2)}MB)`;
   }
   const invalidFile = files.find((f) => !f.type.startsWith("image/"));
   if (invalidFile) {
@@ -504,6 +505,17 @@ export default function CreatePostingPage({
         coreCharacter: p.requestForm?.coreCharacter || "",
       },
     }));
+  };
+
+  const handleDeleteImage = (index: number) => {
+    console.log(previewUrls);
+    console.log(selectedFiles);
+    setPreviewUrls(previewUrls.filter((url) => url !== previewUrls[index]));
+    setSelectedFiles(
+      selectedFiles.filter((file) => file !== selectedFiles[index]),
+    );
+    console.log(previewUrls);
+    console.log(selectedFiles);
   };
 
   if (isMarketerExist) {
@@ -777,11 +789,17 @@ export default function CreatePostingPage({
                           {previewUrls.map((item, index) => (
                             <div
                               key={"preview-ctn" + index}
-                              className="w-2xs rounded-3xl overflow-hidden"
+                              className="relative w-2xs rounded-3xl overflow-hidden border border-gray-200"
                             >
+                              <div
+                                className="absolute right-2 top-2 z-9 bg-red-600 w-[35px] h-[35px] rounded-[50%] flex flex-col justify-center cursor-pointer"
+                                onClick={() => handleDeleteImage(index)}
+                              >
+                                <X className="m-auto" color="white" />
+                              </div>
                               <img
                                 src={item}
-                                className="object-cover w-full h-32"
+                                className="object-cover w-full h-32 hover:scale-110 transition-all"
                               />
                             </div>
                           ))}
