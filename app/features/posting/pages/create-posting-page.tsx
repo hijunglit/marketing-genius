@@ -219,7 +219,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
     if (intent === "regenerate") {
       const parsed = regenerateSchema.safeParse(Object.fromEntries(formData));
       if (!parsed.success) {
-        console.log(parsed.error.format());
         return { ok: false, error: "재생성 데이터가 올바르지 않습니다" };
       }
       const {
@@ -256,7 +255,6 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
     return { ok: false, error: "알 수 없는 요청입니다" };
   } catch (e) {
-    console.error(e);
     return {
       ok: false,
       error: e instanceof Error ? e.message : "오류가 발생했습니다",
@@ -415,7 +413,7 @@ export default function CreatePostingPage({
   const [fileValidationError, setFileValidationError] = useState<string | null>(
     null,
   );
-
+  const [preHashtag, setPreHashtag] = useState("");
   const [preview, setPreview] = useState<PostingResponse | null>(null);
   const [requestId, setRequestId] = useState<number | null>(null);
   const [lastGenerateForm, setLastGenerateForm] =
@@ -508,14 +506,10 @@ export default function CreatePostingPage({
   };
 
   const handleDeleteImage = (index: number) => {
-    console.log(previewUrls);
-    console.log(selectedFiles);
     setPreviewUrls(previewUrls.filter((url) => url !== previewUrls[index]));
     setSelectedFiles(
       selectedFiles.filter((file) => file !== selectedFiles[index]),
     );
-    console.log(previewUrls);
-    console.log(selectedFiles);
   };
 
   if (isMarketerExist) {
@@ -1014,9 +1008,65 @@ export default function CreatePostingPage({
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">해시태그</p>
-                          <p className="text-blue-600">
-                            {preview.hashtags.join(" ")}
-                          </p>
+                          <div className="flex">
+                            {/* A spread argument must either have a tuple type or
+                            be passed to a rest parameter. */}
+                            <Input
+                              id="sethashtags"
+                              name="sethashtags"
+                              placeholder="해시태그 입력 후 엔터"
+                              value={preHashtag}
+                              onChange={(e) => {
+                                setPreHashtag(e.currentTarget.value);
+                              }}
+                            />
+                            <Button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setPreview({
+                                  ...preview,
+                                  hashtags: [
+                                    ...preview.hashtags,
+                                    preHashtag.startsWith("#")
+                                      ? preHashtag
+                                      : "#" + preHashtag,
+                                  ],
+                                });
+                                setPreHashtag("");
+                              }}
+                              className="cursor-pointer"
+                            >
+                              추가
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap gap-1 w-full bg-gray-200 rounded-2xl space-y-1 p-2">
+                            {preview.hashtags.map((hashtag, idx) => (
+                              <div
+                                key={hashtag + idx}
+                                className="flex items-center bg-white size-fit rounded-3xl p-0.5"
+                              >
+                                <p className="text-blue-600">{hashtag}</p>
+                                <Button
+                                  variant={"ghost"}
+                                  className="cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setPreview({
+                                      ...preview,
+                                      hashtags: preview.hashtags.filter(
+                                        (i) =>
+                                          i !==
+                                          e.currentTarget.previousSibling
+                                            ?.textContent,
+                                      ),
+                                    });
+                                  }}
+                                >
+                                  <X />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </Form>
