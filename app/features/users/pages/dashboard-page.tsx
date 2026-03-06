@@ -146,7 +146,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
               </div>
               <div className="flex flex-col gap-7">
                 {contents.map((contents, index) => (
-                  <Link to={"/contents/:id"} key={"contents" + index}>
+                  <Link to={"#"} key={"contents" + index}>
                     <Card>
                       <div className="flex justify-between px-4">
                         <div className="flex">

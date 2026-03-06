@@ -1,6 +1,6 @@
 import type { Route } from "./+types/create-posting-page";
 import { Button } from "~/common/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { Link, useFetcher, redirect, Form, useLoaderData } from "react-router";
 import { Separator } from "~/common/components/ui/separator";
 import { Input } from "~/common/components/ui/input";
@@ -418,6 +418,7 @@ export default function CreatePostingPage({
   const [requestId, setRequestId] = useState<number | null>(null);
   const [lastGenerateForm, setLastGenerateForm] =
     useState<GenerateFormData | null>(null);
+  const [isComposing, setIsComposing] = useState(false);
 
   const { env } = useLoaderData<typeof loader>();
   const supabase = useMemo(() => {
@@ -524,7 +525,6 @@ export default function CreatePostingPage({
 
   const next = () => setStep((s) => Math.min(s + 1, 4));
   const back = () => setStep((s) => Math.max(s - 1, 1));
-
   // 생성하기 submit
   const handleGenerate = () => {
     if (!payload.platform || !payload.template || !payload.requestForm) return;
@@ -1019,6 +1019,28 @@ export default function CreatePostingPage({
                               onChange={(e) => {
                                 setPreHashtag(e.currentTarget.value);
                               }}
+                              onCompositionStart={() => setIsComposing(true)}
+                              onCompositionEnd={() => setIsComposing(false)}
+                              onKeyDown={(
+                                e: KeyboardEvent<HTMLInputElement>,
+                              ) => {
+                                if (isComposing) return;
+                                const keyname = e.key;
+                                if (keyname === "Enter") {
+                                  while (0) {
+                                    setPreview({
+                                      ...preview,
+                                      hashtags: [
+                                        ...preview.hashtags,
+                                        preHashtag.startsWith("#")
+                                          ? preHashtag
+                                          : "#" + preHashtag,
+                                      ],
+                                    });
+                                    setPreHashtag("");
+                                  }
+                                }
+                              }}
                             />
                             <Button
                               onClick={(e) => {
@@ -1089,7 +1111,7 @@ export default function CreatePostingPage({
                     type="button"
                     onClick={back}
                     variant={"secondary"}
-                    className="p-6"
+                    className="p-6 cursor-pointer"
                   >
                     <ArrowLeft /> 다시 입력
                   </Button>
