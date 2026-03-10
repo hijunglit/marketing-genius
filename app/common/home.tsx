@@ -16,7 +16,7 @@ export default function Home() {
             FAQ
           </a>
         </nav>
-        <div className="space-x-2">
+        <div className="flex gap-1">
           <Link to={"/auth/login"} style={styles.headerCta}>
             로그인
           </Link>

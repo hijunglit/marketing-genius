@@ -18,6 +18,8 @@ import {
   BadgeQuestionMark,
   Lightbulb,
   X,
+  TriangleAlert,
+  CheckIcon,
 } from "lucide-react";
 import {
   generatePosting,
@@ -32,6 +34,7 @@ import { PLATFORM_TYPE, TEMPLATE_TYPE } from "../constants";
 import { getMarketer } from "~/features/marketer/queries";
 import { createBrowserClient } from "@supabase/ssr";
 import { Textarea } from "~/common/components/ui/textarea";
+import { useIsMobile } from "~/hooks/use-mobile";
 
 export function meta({}: Route.MetaArgs) {
   return [{ title: "포스팅 생성" }];
@@ -383,10 +386,10 @@ function ChoiceButton({
         cursor: "pointer",
       }}
     >
-      <p className="text-5xl">{icon}</p>
+      <p className="text-2xl lg:text-5xl text-gray-400">{icon}</p>
       <div>
-        <h3 className="font-bold text-lg">{title}</h3>
-        <p className="text-sm">{description}</p>
+        <h3 className="font-bold text-sm lg:text-lg">{title}</h3>
+        <p className="text-xs lg:text-sm text-gray-400">{description}</p>
       </div>
     </button>
   );
@@ -599,12 +602,13 @@ export default function CreatePostingPage({
   ];
 
   const submitting = fetcher.state !== "idle";
+  const isMobile = useIsMobile();
   return (
-    <div className="p-20 space-y-10">
+    <div className="px-4 py-6 lg:p-20 space-y-4">
       {isMarketerExist ? (
         <>
-          <header className="flex justify-between">
-            <div className="space-y-3">
+          <header className="flex justify-between items-center">
+            <div className="lg:space-y-3">
               <h1 className="text-xl lg:text-2xl font-extrabold">
                 새 포스팅 생성
               </h1>
@@ -613,31 +617,65 @@ export default function CreatePostingPage({
               </p>
             </div>
             <div className="space-x-2.5">
-              <Button className="p-6" asChild>
-                <Link to={"/dashboard"}>
-                  <LayoutDashboard />
-                  대시보드
-                </Link>
-              </Button>
-              <Button className="p-6" asChild>
-                <Link to={"/contents"}>
-                  <ArrowLeft />
-                  목록으로
-                </Link>
-              </Button>
+              {isMobile ? (
+                <>
+                  <Button
+                    className="w-[40px] h-[40px] rounded-[50%] bg-white border"
+                    asChild
+                  >
+                    <Link to={"/dashboard"}>
+                      <LayoutDashboard color="#000" />
+                    </Link>
+                  </Button>
+                  <Button
+                    className="w-[40px] h-[40px] rounded-[50%] bg-white border"
+                    asChild
+                  >
+                    <Link to={"/contents"}>
+                      <ArrowLeft color="#000" />
+                    </Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className="p-6" asChild>
+                    <Link to={"/dashboard"}>
+                      <LayoutDashboard />
+                      대시보드
+                    </Link>
+                  </Button>
+                  <Button className="p-6" asChild>
+                    <Link to={"/contents"}>
+                      <ArrowLeft />
+                      목록으로
+                    </Link>
+                  </Button>
+                </>
+              )}
             </div>
           </header>
-          <main className="space-y-10 max-w-7xl">
+          <main className="space-y-4 max-w-7xl">
             {/* Progress */}
-            <div className="flex justify-around shadow-2xl border rounded-2xl p-[50px]">
+            <div className="flex justify-around shadow-2xl border rounded-2xl p-[10px] lg:p-[50px]">
               {progress.map((n) => (
-                <div key={n.step} className="flex flex-col items-center">
+                <div
+                  key={n.step}
+                  className="flex flex-col items-center space-y-2"
+                >
                   <div
-                    className={`w-[50px] h-[50px] rounded-[50%] ${n.step <= step ? "bg-primary" : "bg-gray-400"} border-2 border-black flex flex-col justify-center text-center`}
+                    className={`w-[32px] h-[32px] lg:w-[50px] lg:h-[50px] rounded-[50%] ${n.step <= step ? "bg-primary border-x-purple-200" : "bg-white"} border-2 flex flex-col justify-center text-center`}
                   >
-                    <p className="font-bold text-white">{n.step}</p>
+                    <span
+                      className={`font-bold ${n.step == step ? "text-white" : "text-gray-300"}`}
+                    >
+                      {`${n.step < step ? "✓" : n.step}`}
+                    </span>
                   </div>
-                  <p>{n.text}</p>
+                  <p
+                    className={`text-xs font-bold ${n.step <= step ? "text-violet-600" : "text-gray-300"}`}
+                  >
+                    {n.text}
+                  </p>
                 </div>
                 // <div
                 //   key={n.step}
@@ -654,10 +692,12 @@ export default function CreatePostingPage({
 
             {/* Step 1 */}
             {step === 1 && (
-              <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
-                <div className="space-y-3">
-                  <h2 className="font-bold text-lg sm:text-xl">플랫폼 선택</h2>
-                  <p className="text-sm sm:text-base text-gray-500">
+              <section className="space-y-4 lg:space-y-10 shadow-2xl border rounded-2xl p-[20px] lg:p-[50px]">
+                <div className="lg:space-y-3">
+                  <h2 className="font-bold text-base lg:text-2xl">
+                    플랫폼 선택
+                  </h2>
+                  <p className="text-xs lg:text-sm text-gray-500">
                     포스팅할 플랫폼을 선택하세요
                   </p>
                 </div>
@@ -681,13 +721,23 @@ export default function CreatePostingPage({
                     description="블로그 포스팅에 적합"
                   />
                 </div>
+                {payload.platform == null && (
+                  <div className="w-full bg-amber-200 p-1.5 text-xs">
+                    <div className="w-px h-full bg-amber-600"></div>
+
+                    <span className="text-amber-900 font-medium">
+                      <TriangleAlert size={18} className="inline pr-1" />
+                      플랫폼을 선택해주세요
+                    </span>
+                  </div>
+                )}
                 <Separator />
                 <div className="flex justify-end">
                   <Button
                     type="button"
                     onClick={next}
                     disabled={payload.platform === null}
-                    className="p-8 text-lg"
+                    className={`${payload.platform === null ? "bg-gray-400" : "bg-primary"}lg:p-8 lg:text-lg`}
                   >
                     다음 단계 <ArrowRight />
                   </Button>
@@ -697,12 +747,16 @@ export default function CreatePostingPage({
 
             {/* Step 2 */}
             {step === 2 && (
-              <section className="space-y-10">
+              <section className="space-y-4 lg:space-y-10 shadow-2xl border rounded-2xl p-[20px] lg:p-[50px]">
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 600 }}>템플릿 선택</h2>
-                  <p>포스팅 스타일에 맞는 템플릿을 선택하세요</p>
+                  <h2 className="font-bold text-base lg:text-2xl">
+                    템플릿 선택
+                  </h2>
+                  <p className="text-xs lg:text-sm text-gray-500">
+                    포스팅 스타일에 맞는 템플릿을 선택하세요
+                  </p>
                 </div>
-                <div className="grid grid-cols-3 gap-5">
+                <div className="grid lg:grid-cols-3 gap-2 lg:gap-5">
                   <ChoiceButton
                     active={payload.template === "basic"}
                     onClick={() =>
@@ -747,7 +801,7 @@ export default function CreatePostingPage({
                     onClick={back}
                     disabled={false}
                     variant={"secondary"}
-                    className="p-6"
+                    className="p-4 lg:p-6 bg-white border-gray-400 border"
                   >
                     이전
                   </Button>
@@ -756,7 +810,7 @@ export default function CreatePostingPage({
                     onClick={next}
                     disabled={payload.template === null}
                     variant={"secondary"}
-                    className="p-6"
+                    className="p-4 lg:p-6 bg-primary text-white"
                   >
                     다음 <ArrowRight />
                   </Button>
@@ -766,18 +820,21 @@ export default function CreatePostingPage({
 
             {/* Step 3 */}
             {step === 3 && (
-              <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
+              <section className="space-y-4 lg:space-y-10 shadow-2xl border rounded-2xl p-[20px] lg:p-[50px]">
                 <div className="space-y-3">
-                  <h2 className="font-extrabold text-3xl">컨텐츠 작성</h2>
-                  <p className="text-lg text-gray-500">
+                  <h2 className="font-bold text-base lg:text-2xl">
+                    컨텐츠 작성
+                  </h2>
+                  <p className="text-xs lg:text-sm text-gray-500">
                     포스팅에 필요한 세부 정보를 입력하세요
                   </p>
                 </div>
-
                 <Form method="post" encType="multipart/form-data">
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <Label htmlFor="files">이미지 업로드</Label>
+                      <Label htmlFor="files" className="text-xs lg:text-sm">
+                        이미지 업로드
+                      </Label>
                       {previewUrls && (
                         <div className="grid grid-cols-4 gap-4">
                           {previewUrls.map((item, index) => (
@@ -816,7 +873,12 @@ export default function CreatePostingPage({
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="productName">제품/서비스명</Label>
+                      <Label
+                        htmlFor="productName"
+                        className="text-xs lg:text-sm"
+                      >
+                        제품/서비스명
+                      </Label>
                       <Input
                         id="productName"
                         name="productName"
@@ -839,7 +901,12 @@ export default function CreatePostingPage({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="targetCustomer">타겟 고객층</Label>
+                      <Label
+                        htmlFor="targetCustomer"
+                        className="text-xs lg:text-sm"
+                      >
+                        타겟 고객층
+                      </Label>
                       <Input
                         id="targetCustomer"
                         name="targetCustomer"
@@ -861,7 +928,12 @@ export default function CreatePostingPage({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="coreCharacter">핵심 특징</Label>
+                      <Label
+                        htmlFor="coreCharacter"
+                        className="text-xs lg:text-sm"
+                      >
+                        핵심 특징
+                      </Label>
                       <textarea
                         name="coreCharacter"
                         id="coreCharacter"
@@ -928,18 +1000,20 @@ export default function CreatePostingPage({
 
             {/* Step 4 - 프리뷰 */}
             {step === 4 && preview && (
-              <section className="space-y-10 shadow-2xl border rounded-2xl p-[50px]">
+              <section className="space-y-4 lg:space-y-10 shadow-2xl border rounded-2xl p-[20px] lg:p-[50px]">
                 <div className="space-y-3">
-                  <h2 className="font-extrabold text-3xl">생성 결과 확인</h2>
-                  <p className="text-lg text-gray-500">
+                  <h2 className="font-bold text-base lg:text-2xl">
+                    생성 결과 확인
+                  </h2>
+                  <p className="text-xs lg:text-sm text-gray-500">
                     AI가 생성한 포스팅을 확인하고 저장하거나 재생성하세요
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid lg:grid-cols-2 gap-8">
                   {/* 이미지 프리뷰 */}
                   <div className="space-y-4">
-                    <h3 className="font-bold text-xl">이미지</h3>
+                    <h3 className="font-bold text-base lg:text-2xl">이미지</h3>
                     <div className="grid grid-cols-2 gap-2">
                       {previewUrls?.map((url, idx) => (
                         <img
@@ -959,9 +1033,11 @@ export default function CreatePostingPage({
 
                   {/* 텍스트 프리뷰 */}
                   <div className="space-y-4">
-                    <Form>
-                      <h3 className="font-bold text-xl">포스팅 내용</h3>
-                      <div className="bg-gray-50 p-6 rounded-lg space-y-4">
+                    <Form className="space-y-4">
+                      <h3 className="font-bold text-base lg:text-2xl">
+                        포스팅 내용
+                      </h3>
+                      <div className="space-y-4">
                         <div>
                           <Label
                             className="text-sm text-gray-500"
@@ -1006,15 +1082,15 @@ export default function CreatePostingPage({
                             }
                           />
                         </div>
-                        <div>
+                        <div className="space-y-4">
                           <p className="text-sm text-gray-500">해시태그</p>
-                          <div className="flex">
+                          <div className="flex gap-1">
                             {/* A spread argument must either have a tuple type or
                             be passed to a rest parameter. */}
                             <Input
                               id="sethashtags"
                               name="sethashtags"
-                              placeholder="해시태그 입력 후 엔터"
+                              placeholder="# 해시태그 입력 후 엔터"
                               value={preHashtag}
                               onChange={(e) => {
                                 setPreHashtag(e.currentTarget.value);
@@ -1027,6 +1103,7 @@ export default function CreatePostingPage({
                                 if (isComposing) return;
                                 const keyname = e.key;
                                 if (keyname === "Enter") {
+                                  if (preHashtag.length === 0) return;
                                   while (0) {
                                     setPreview({
                                       ...preview,
@@ -1045,6 +1122,7 @@ export default function CreatePostingPage({
                             <Button
                               onClick={(e) => {
                                 e.preventDefault();
+                                if (preHashtag.length === 0) return;
                                 setPreview({
                                   ...preview,
                                   hashtags: [
@@ -1061,13 +1139,15 @@ export default function CreatePostingPage({
                               추가
                             </Button>
                           </div>
-                          <div className="flex flex-wrap gap-1 w-full bg-gray-200 rounded-2xl space-y-1 p-2">
+                          <div className="flex flex-wrap gap-1 w-full bg-gray-100 rounded-2xl space-y-1 p-2">
                             {preview.hashtags.map((hashtag, idx) => (
                               <div
                                 key={hashtag + idx}
-                                className="flex items-center bg-white size-fit rounded-3xl p-0.5"
+                                className="flex items-center bg-white size-fit rounded-lg p-px border-y-blue-200 border"
                               >
-                                <p className="text-blue-600">{hashtag}</p>
+                                <p className="text-blue-600 text-xs lg:text-sm">
+                                  {hashtag}
+                                </p>
                                 <Button
                                   variant={"ghost"}
                                   className="cursor-pointer"
@@ -1084,7 +1164,7 @@ export default function CreatePostingPage({
                                     });
                                   }}
                                 >
-                                  <X />
+                                  <X color="#155dfc" />
                                 </Button>
                               </div>
                             ))}
@@ -1111,17 +1191,17 @@ export default function CreatePostingPage({
                     type="button"
                     onClick={back}
                     variant={"secondary"}
-                    className="p-6 cursor-pointer"
+                    className="lg:p-6 cursor-pointer"
                   >
-                    <ArrowLeft /> 다시 입력
+                    이전
                   </Button>
-                  <div className="space-x-3">
+                  <div className="space-x-3 flex">
                     <Button
                       type="button"
                       onClick={handleRegenerate}
                       disabled={submitting}
                       variant={"outline"}
-                      className="p-6"
+                      className="lg:p-6"
                     >
                       {submitting ? (
                         <LoaderCircle className="animate-spin" />
@@ -1134,14 +1214,12 @@ export default function CreatePostingPage({
                       type="button"
                       onClick={handleConfirm}
                       disabled={submitting || !!fileValidationError}
-                      className="p-6"
+                      className="lg:p-6"
                     >
                       {submitting ? (
                         <LoaderCircle className="animate-spin" />
-                      ) : (
-                        <Check />
-                      )}
-                      확정하고 저장
+                      ) : null}
+                      저장
                     </Button>
                   </div>
                 </div>
