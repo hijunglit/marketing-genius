@@ -81,7 +81,7 @@ export function AppSidebar({
             <SidebarMenuButton asChild>
               <Link to={"/"}>
                 <Home />
-                <span>Marketing Genius</span>
+                <span>복덩이 AI</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

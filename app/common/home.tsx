@@ -1,10 +1,17 @@
 import { Link } from "react-router";
 
 export default function Home() {
+  const logoUrl =
+    "https://github-production-user-asset-6210df.s3.amazonaws.com/113867021/562087579-a66c730e-e08c-434f-bb8a-ff57e7209f59.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260312%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260312T075138Z&X-Amz-Expires=300&X-Amz-Signature=3696a2258142924af97d17c6d782600df320c64cf0fadcd28a5248dc7c9218b0&X-Amz-SignedHeaders=host";
+  const logoText =
+    "https://github-production-user-asset-6210df.s3.amazonaws.com/113867021/562080151-8d33a8df-2673-4c2f-96eb-8d684abe3821.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260312%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260312T073413Z&X-Amz-Expires=300&X-Amz-Signature=3b77ca4a0d0094b83a4027cb1bf9e05e93cf6512360d10145e553950d09c5fc5&X-Amz-SignedHeaders=host";
   return (
     <main style={styles.page}>
       <header style={styles.header}>
-        <div style={styles.brand}>Marketing Genius</div>
+        <div style={styles.brand} className="flex items-center">
+          <img src={logoUrl} className="w-[80px] h-[80px]" />
+          <strong className="text-lg">복덩이AI</strong>
+        </div>
         <nav style={styles.nav}>
           <a href="#how" style={styles.navLink}>
             사용 방법
