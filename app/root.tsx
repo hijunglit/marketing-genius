@@ -20,6 +20,7 @@ import { getMarketer } from "./features/marketer/queries";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: "icon", type: "image/svg+xml", href: "favicon.ico" },
   {
     rel: "preconnect",
     href: "https://fonts.gstatic.com",
