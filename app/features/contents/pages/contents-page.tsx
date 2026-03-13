@@ -1,4 +1,11 @@
-import { Home, PlusIcon, SquarePen, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Download,
+  Home,
+  PlusIcon,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import { Link, redirect } from "react-router";
 import { Button } from "~/common/components/ui/button";
 import {
@@ -29,6 +36,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "~/common/components/ui/carousel";
+import { useState } from "react";
+import { title } from "process";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "컨텐츠 | Marketing Genius" }];
@@ -48,6 +57,22 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
 export default function ContentsPage({ loaderData }: Route.ComponentProps) {
   const contents = loaderData;
+  const [copyText, setCopyText] = useState<{
+    title: string;
+    description: string;
+    hashtags: string;
+  }>();
+  const handleCopy = async (text: string) => {
+    try {
+      navigator.clipboard.writeText(title);
+      alert("복사 성공!");
+    } catch (err) {
+      alert("복사가 실패했습니다");
+    }
+  };
+  const handleDownload = () => {
+    console.log("click download!");
+  };
   return (
     <div className="p-4 lg:p-20 space-y-10">
       <header className="flex flex-col text-center gap-2 justify-between items-center sm:flex-row sm:text-left">
@@ -92,7 +117,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                       <div className="w-full bg-black flex flex-col justify-center">
                         <Carousel className="w-full max-w-[480px] h-full max-h-[480px]">
                           <div className="p-1 h-full">
-                            <CarouselContent className="h-full">
+                            <CarouselContent>
                               {contents.images.map((image, index) => (
                                 <CarouselItem key={image.image_url + index}>
                                   <img
@@ -121,15 +146,19 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                         <DialogFooter>
                           <div className="space-x-1.5">
                             <Button
+                              onClick={() => handleCopy("")}
                               variant={"secondary"}
                               className="cursor-pointer"
                             >
+                              <Copy />
                               복사
                             </Button>
                             <Button
+                              onClick={handleDownload}
                               variant={"secondary"}
                               className="cursor-pointer"
                             >
+                              <Download />
                               이미지
                             </Button>
                           </div>
