@@ -89,35 +89,55 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                 <Dialog key={"model" + index}>
                   {contents.request_contents[0].platform === "instagram" && (
                     <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2">
-                      <div>
-                        <Carousel>
-                          <CarouselContent className="max-w-[500px] w-full max-h-[550px] h-full">
-                            {contents.images.map((image, index) => (
-                              <CarouselItem key={image.image_url + index}>
-                                <img
-                                  src={image.image_url}
-                                  className="object-cover w-full h-full"
-                                />
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                          <CarouselPrevious />
-                          <CarouselNext />
+                      <div className="w-full bg-black flex flex-col justify-center">
+                        <Carousel className="w-full max-w-[480px] h-full max-h-[480px]">
+                          <div className="p-1 h-full">
+                            <CarouselContent className="h-full">
+                              {contents.images.map((image, index) => (
+                                <CarouselItem key={image.image_url + index}>
+                                  <img
+                                    src={image.image_url}
+                                    className="object-cover"
+                                  />
+                                </CarouselItem>
+                              ))}
+                            </CarouselContent>
+                            <CarouselPrevious />
+                            <CarouselNext />
+                          </div>
                         </Carousel>
                       </div>
-                      <div>
+                      <div className="flex flex-col justify-between">
                         <DialogHeader>
                           <DialogTitle>
                             {contents.request_contents[0].title}
                           </DialogTitle>
                         </DialogHeader>
                         <div>{contents.text}</div>
+                        <div className="text-[#2563EB]">
+                          {" "}
+                          {contents.hashtag.split(" ").join(" ")}
+                        </div>
                         <DialogFooter>
-                          {contents.hashtag.split(" ")}
+                          <div className="space-x-1.5">
+                            <Button
+                              variant={"secondary"}
+                              className="cursor-pointer"
+                            >
+                              복사
+                            </Button>
+                            <Button
+                              variant={"secondary"}
+                              className="cursor-pointer"
+                            >
+                              이미지
+                            </Button>
+                          </div>
                         </DialogFooter>
                       </div>
                     </DialogContent>
                   )}
+
                   {contents.request_contents[0].platform === "blog" && (
                     <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full">
                       <DialogHeader>
