@@ -136,7 +136,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         </section>
         <section>
           {contents.length > 0 ? (
-            <div>
+            <div className="space-y-1.5">
               <div className="flex justify-between">
                 <h3 className="text-lg font-bold">최근 포스팅</h3>
                 <Link to={"/contents"} className="flex items-center">
@@ -146,46 +146,47 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
               </div>
               <div className="flex flex-col gap-7">
                 {contents.map((contents, index) => (
-                  <Link to={"#"} key={"contents" + index}>
-                    <Card>
-                      <div className="flex justify-between px-4">
-                        <div className="flex">
-                          <div className="flex items-center gap-4">
-                            <div className="size-12 rounded-xl shadow-lg overflow-hidden">
-                              {contents.images.length > 0 ? (
-                                <img src={contents.images[0].image_url} />
-                              ) : null}
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold">
-                                {contents.request_contents[0].title}
-                              </p>
-                              <span className="text-xs">
-                                {contents.request_contents[0].product_name}
+                  <Card
+                    key={"contents" + index}
+                    className="w-full hover:bg-violet-100 transition duration-500"
+                  >
+                    <div className="flex justify-between px-4">
+                      <div className="flex">
+                        <div className="flex items-center gap-4">
+                          <div className="size-12 rounded-xl shadow-lg overflow-hidden">
+                            {contents.images.length > 0 ? (
+                              <img src={contents.images[0].image_url} />
+                            ) : null}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">
+                              {contents.request_contents[0].title}
+                            </p>
+                            <span className="text-xs">
+                              {contents.request_contents[0].product_name}
+                            </span>
+                            <div className="flex items-center text-xs">
+                              <ClockIcon size={10} />
+                              <span>
+                                {DateTime.fromISO(
+                                  contents.created_at,
+                                ).toRelative()}
                               </span>
-                              <div className="flex items-center text-xs">
-                                <ClockIcon size={10} />
-                                <span>
-                                  {DateTime.fromISO(
-                                    contents.created_at,
-                                  ).toRelative()}
-                                </span>
-                              </div>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            {/* <p className="text-gray-500 text-sm">
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          {/* <p className="text-gray-500 text-sm">
                               생성된 포스팅
                             </p>
                             <p className="font-bold">1개</p> */}
-                          </div>
-                          <ChevronRightIcon color="#ccc" />
                         </div>
+                        <ChevronRightIcon color="#ccc" />
                       </div>
-                    </Card>
-                  </Link>
+                    </div>
+                  </Card>
                 ))}
               </div>
             </div>

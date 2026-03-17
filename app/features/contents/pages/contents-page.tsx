@@ -37,7 +37,6 @@ import {
   CarouselPrevious,
 } from "~/common/components/ui/carousel";
 import { useState } from "react";
-import { title } from "process";
 
 export const meta: Route.MetaFunction = () => {
   return [{ title: "컨텐츠 | Marketing Genius" }];
@@ -57,21 +56,22 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 
 export default function ContentsPage({ loaderData }: Route.ComponentProps) {
   const contents = loaderData;
-  const [copyText, setCopyText] = useState<{
-    title: string;
-    description: string;
-    hashtags: string;
-  }>();
-  const handleCopy = async (text: string) => {
+  const handleCopy = async (
+    title: string,
+    description: string,
+    hashtag: string,
+  ) => {
     try {
-      navigator.clipboard.writeText(title);
+      navigator.clipboard.writeText(title + description + hashtag);
       alert("복사 성공!");
     } catch (err) {
       alert("복사가 실패했습니다");
     }
   };
-  const handleDownload = () => {
-    console.log("click download!");
+  const handleDownload = async (imagesUrl: string[], fileName: string[]) => {
+    for (let i = 0; i == imagesUrl.length; i++) {
+      console.log(imagesUrl.length);
+    }
   };
   return (
     <div className="p-4 lg:p-20 space-y-10">
@@ -140,13 +140,18 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                         </DialogHeader>
                         <div>{contents.text}</div>
                         <div className="text-[#2563EB]">
-                          {" "}
                           {contents.hashtag.split(" ").join(" ")}
                         </div>
                         <DialogFooter>
                           <div className="space-x-1.5">
                             <Button
-                              onClick={() => handleCopy("")}
+                              onClick={() =>
+                                handleCopy(
+                                  contents.request_contents[0].title,
+                                  contents.text,
+                                  contents.hashtag,
+                                )
+                              }
                               variant={"secondary"}
                               className="cursor-pointer"
                             >
@@ -154,7 +159,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                               복사
                             </Button>
                             <Button
-                              onClick={handleDownload}
+                              onClick={() => ""}
                               variant={"secondary"}
                               className="cursor-pointer"
                             >
