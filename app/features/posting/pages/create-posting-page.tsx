@@ -365,18 +365,21 @@ function ChoiceButton({
   icon,
   title,
   description,
+  disabled,
 }: {
   active: boolean;
   onClick: () => void;
   icon: any;
   title: string;
   description: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="flex items-center gap-5"
+      disabled={disabled}
       style={{
         textAlign: "left",
         padding: 18,
@@ -713,12 +716,13 @@ export default function CreatePostingPage({
                   />
                   <ChoiceButton
                     active={payload.platform === "blog"}
+                    disabled
                     onClick={() =>
                       setPayload((p) => ({ ...p, platform: "blog" }))
                     }
                     icon="📄"
                     title="블로그"
-                    description="블로그 포스팅에 적합"
+                    description="서비스 준비중입니다..."
                   />
                 </div>
                 {payload.platform == null && (
