@@ -68,9 +68,23 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
       alert("복사가 실패했습니다");
     }
   };
-  const handleDownload = async (imagesUrl: string[], fileName: string[]) => {
-    for (let i = 0; i == imagesUrl.length; i++) {
-      console.log(imagesUrl.length);
+  const handleDownload = (imagesUrl: string[], fileName?: string) => {
+    try {
+      alert(imagesUrl.length + "개의 이미지를 저장합니다.");
+      imagesUrl.forEach(async (img, idx) => {
+        const res = await fetch(img);
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName ? fileName : "bok-ai-image_" + idx;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      });
+      return;
+    } catch (err) {
+      console.error("다운로드 실패", err);
     }
   };
   return (
@@ -113,7 +127,10 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
               {loaderData.map((contents, index) => (
                 <Dialog key={"model" + index}>
                   {contents.request_contents[0].platform === "instagram" && (
-                    <DialogContent className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2">
+                    <DialogContent
+                      aria-describedby={undefined}
+                      className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2"
+                    >
                       <div className="w-full bg-black flex flex-col justify-center">
                         <Carousel className="w-full max-w-[480px] h-full max-h-[480px]">
                           <div className="p-1 h-full">
@@ -159,7 +176,11 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                               복사
                             </Button>
                             <Button
-                              onClick={() => ""}
+                              onClick={() =>
+                                handleDownload(
+                                  contents.images.map((i) => i.image_url),
+                                )
+                              }
                               variant={"secondary"}
                               className="cursor-pointer"
                             >
