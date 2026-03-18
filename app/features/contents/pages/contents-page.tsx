@@ -129,7 +129,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                   {contents.request_contents[0].platform === "instagram" && (
                     <DialogContent
                       aria-describedby={undefined}
-                      className="max-w-[1024px] w-full max-h-[650px] h-full grid grid-cols-2"
+                      className="max-w-[1024px] w-full max-h-[650px] h-full grid sm:grid-cols-2 overflow-y-auto"
                     >
                       <div className="w-full bg-black flex flex-col justify-center">
                         <Carousel className="w-full max-w-[480px] h-full max-h-[480px]">
@@ -149,7 +149,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                           </div>
                         </Carousel>
                       </div>
-                      <div className="flex flex-col justify-between">
+                      <div className="flex flex-col justify-between space-y-6.5">
                         <DialogHeader>
                           <DialogTitle>
                             {contents.request_contents[0].title}
@@ -159,7 +159,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                         <div className="text-[#2563EB]">
                           {contents.hashtag.split(" ").join(" ")}
                         </div>
-                        <DialogFooter>
+                        <DialogFooter className="space-x-1.5">
                           <div className="space-x-1.5">
                             <Button
                               onClick={() =>
@@ -188,6 +188,10 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                               이미지
                             </Button>
                           </div>
+
+                          <DialogClose asChild className="cursor-pointer">
+                            <Button variant={"outline"}>닫기</Button>
+                          </DialogClose>
                         </DialogFooter>
                       </div>
                     </DialogContent>
@@ -221,7 +225,7 @@ export default function ContentsPage({ loaderData }: Route.ComponentProps) {
                         ))}
                         <p>{contents.text}</p>
                       </div>
-                      <DialogClose asChild>
+                      <DialogClose asChild className="cursor-pointer">
                         <Button variant={"outline"}>닫기</Button>
                       </DialogClose>
                     </DialogContent>
