@@ -1,6 +1,11 @@
 import { GithubIcon, LockIcon, MessageCircleIcon } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "~/common/components/ui/button";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "~/common/components/ui/hover-card";
 import { Separator } from "~/common/components/ui/separator";
 
 export default function AuthButtons() {
@@ -20,12 +25,19 @@ export default function AuthButtons() {
             Kakao Talk
           </Link>
         </Button>
-        <Button variant="outline" className="w-full" asChild>
-          <Link to="/auth/otp/start">
-            <LockIcon className="w-4 h-4" />
-            OTP
-          </Link>
-        </Button>
+        <HoverCard>
+          <HoverCardTrigger>
+            <Button className="w-full" disabled>
+              <Link to="/auth/otp/start" className="flex items-center gap-1">
+                <LockIcon className="w-4 h-4" />
+                OTP
+              </Link>
+            </Button>
+          </HoverCardTrigger>
+          <HoverCardContent className="flex w-64 flex-col gap-0.5">
+            <div className="text-sm">준비중입니다...</div>
+          </HoverCardContent>
+        </HoverCard>
       </div>
     </div>
   );
