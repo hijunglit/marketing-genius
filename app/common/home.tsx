@@ -4,7 +4,10 @@ import { RollingBanner } from "./components/rolling-banner";
 import { makeSSRClient } from "~/supa-client";
 
 export const meta: Route.MetaFunction = () => {
-  return [{ title: "홈 | 복덩이 AI" }];
+  return [
+    { title: "홈 | 복덩이 AI" },
+    { name: "자영업자의 홍보를 책임지는 AI 마케터" },
+  ];
 };
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
