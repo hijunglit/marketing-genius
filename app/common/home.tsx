@@ -1,16 +1,33 @@
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
+import type { Route } from "./+types/home";
+import { RollingBanner } from "./components/rolling-banner";
+import { makeSSRClient } from "~/supa-client";
 
-export default function Home() {
+export const meta: Route.MetaFunction = () => {
+  return [{ title: "홈 | 복덩이 AI" }];
+};
+
+export const loader = async ({ request }: Route.LoaderArgs) => {
+  const { client, headers } = makeSSRClient(request);
+  const {
+    data: { user },
+  } = await client.auth.getUser();
+  if (!user) return;
+  return user;
+};
+
+export default function Home({ loaderData }: Route.ComponentProps) {
   const logoUrl =
     "https://github-production-user-asset-6210df.s3.amazonaws.com/113867021/562674819-a236fc1e-039f-445b-b4a4-6e53ed473d4c.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260313%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260313T021342Z&X-Amz-Expires=300&X-Amz-Signature=112392c0854ef066cb1d18b53399658dfc70b1762166c4ff417823c6034865e6&X-Amz-SignedHeaders=host";
   const logoText =
     "https://github-production-user-asset-6210df.s3.amazonaws.com/113867021/562080151-8d33a8df-2673-4c2f-96eb-8d684abe3821.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260312%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260312T073413Z&X-Amz-Expires=300&X-Amz-Signature=3b77ca4a0d0094b83a4027cb1bf9e05e93cf6512360d10145e553950d09c5fc5&X-Amz-SignedHeaders=host";
   return (
     <main style={styles.page}>
+      <RollingBanner />
       <header style={styles.header}>
         <div style={styles.brand} className="flex items-center">
-          <img src={logoUrl} className="w-[80px] h-[80px]" />
-          <strong className="text-lg">복덩이AI</strong>
+          {/* <img src={logoUrl} className="w-[80px] h-[80px]" /> */}
+          <strong className="text-2xl">복덩이 AI</strong>
         </div>
         <nav style={styles.nav}>
           <a href="#how" style={styles.navLink}>
@@ -24,12 +41,20 @@ export default function Home() {
           </a>
         </nav>
         <div className="flex gap-1">
-          <Link to={"/auth/login"} style={styles.headerCta}>
-            로그인
-          </Link>
-          <Link to={"/auth/join"} style={styles.headerCta}>
-            무료로 시작하기
-          </Link>
+          {loaderData ? (
+            <Link to={"/dashboard"} style={styles.headerCta}>
+              시작하기
+            </Link>
+          ) : (
+            <>
+              <Link to={"/auth/login"} style={styles.headerCta}>
+                로그인
+              </Link>
+              <Link to={"/auth/join"} style={styles.headerCta}>
+                무료로 시작하기
+              </Link>
+            </>
+          )}
         </div>
       </header>
 
@@ -154,18 +179,19 @@ export default function Home() {
             highlighted={false}
           />
           <PriceCard
+            color="#ccc"
             name="Pro"
-            price="₩29,000"
+            price="₩2,900"
             subtitle="꾸준히 성장"
-            items={["월 300회 생성", "톤/템플릿 확장", "우선 생성 + 빠른 개선"]}
+            items={["월 100회 생성", "톤/템플릿 확장", "우선 생성 + 빠른 개선"]}
             ctaText="Pro로 업그레이드"
             ctaHref="#"
             highlighted={true}
           />
         </div>
         <p style={styles.micro}>
-          * 가격/한도는 임시입니다. 지금은 “구매 전환 버튼”만 먼저 살아있게 해도
-          충분합니다.
+          * 현태 베타 테스트 버전으로 무료 이용이 가능합니다. <br />
+          추후 유료로 변경될 수 있습니다.
         </p>
       </section>
 
@@ -287,6 +313,7 @@ function PriceCard({
   ctaText,
   ctaHref,
   highlighted,
+  color,
 }: {
   name: string;
   price: string;
@@ -295,6 +322,7 @@ function PriceCard({
   ctaText: string;
   ctaHref: string;
   highlighted: boolean;
+  color?: string;
 }) {
   return (
     <div
@@ -304,14 +332,22 @@ function PriceCard({
       }}
     >
       <div style={styles.priceTop}>
-        <div style={styles.priceName}>{name}</div>
-        <div style={styles.price}>
-          {price}
-          <span style={styles.priceUnit}>/월</span>
+        <div style={{ ...styles.priceName, color: `${color ? color : null}` }}>
+          {name}
         </div>
-        <div style={styles.priceSub}>{subtitle}</div>
+        <div style={{ ...styles.price, color: `${color ? color : null}` }}>
+          {price}
+          <span
+            style={{ ...styles.priceUnit, color: `${color ? color : null}` }}
+          >
+            /월
+          </span>
+        </div>
+        <div style={{ ...styles.priceSub, color: `${color ? color : null}` }}>
+          {subtitle}
+        </div>
       </div>
-      <ul style={styles.ul}>
+      <ul style={{ ...styles.ul, color: `${color ? color : null}` }}>
         {items.map((x) => (
           <li key={x} style={styles.li}>
             {x}
@@ -320,7 +356,15 @@ function PriceCard({
       </ul>
       <a
         href={ctaHref}
-        style={{ ...styles.primaryCta, width: "100%", textAlign: "center" }}
+        style={{
+          ...styles.primaryCta,
+          width: "100%",
+          textAlign: "center",
+          color: `${color ? "#fff" : null}`,
+          pointerEvents: `${color ? "none" : "auto"}`,
+          border: `${color ? "1px #ccc outline" : null}`,
+          background: `${color ? "#ccc" : null}`,
+        }}
       >
         {ctaText}
       </a>
