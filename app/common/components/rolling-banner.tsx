@@ -1,9 +1,6 @@
 import type React from "react";
 
-const items = [
-  "현재 베타 테스트 운영중입니다.",
-  "현재 베타 테스트 운영중입니다.",
-];
+const items = ["현재 테스트 운영중입니다.", "현재 테스트 운영중입니다."];
 const doubleItems = [...items, ...items];
 
 export const RollingBanner: React.FC = () => {

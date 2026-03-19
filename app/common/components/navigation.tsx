@@ -19,7 +19,7 @@ export default function Navigation({
   marketerId: number | null;
 }) {
   return isLoggedIn ? (
-    <nav className="absolute md:relative">
+    <nav className="absolute md:relative min-h-dvh">
       <SidebarProvider className="w-fit">
         <AppSidebar
           name={name}

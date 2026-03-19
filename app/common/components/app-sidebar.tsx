@@ -73,15 +73,21 @@ export function AppSidebar({
       icon: Bot,
     },
   ];
+  const { isMobile, setOpenMobile } = useSidebar();
+  const handleClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="bg-[#FAFAFA]">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to={"/"}>
                 <Home />
-                <span>복덩이 AI</span>
+                <strong>복덩이 AI</strong>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -97,7 +103,7 @@ export function AppSidebar({
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <Link to={item.url}>
+                    <Link to={item.url} onClick={handleClick}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
