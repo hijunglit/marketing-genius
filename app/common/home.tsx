@@ -6,7 +6,6 @@ import { makeSSRClient } from "~/supa-client";
 export const meta: Route.MetaFunction = () => {
   return [
     { title: "홈 | 복덩이 AI" },
-    { name: "자영업자의 홍보를 책임지는 AI 마케터" },
     { content: "자영업자의 홍보를 책임지는 AI 마케터" },
   ];
 };
